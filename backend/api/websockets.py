@@ -7,7 +7,8 @@ import asyncio
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-redis_client = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=int(os.getenv("REDIS_PORT", 6379)), db=0, decode_responses=True)
+# Updated to use REDIS_URL for Upstash SSL compatibility
+redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 @router.websocket("/ws/logs")
 async def websocket_logs(websocket: WebSocket):

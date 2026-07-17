@@ -16,13 +16,8 @@ from utils.s3_client import archive_to_s3
 
 logger = logging.getLogger(__name__)
 
-# Initialize Redis client for LLM Caching
-redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST", "localhost"), 
-    port=int(os.getenv("REDIS_PORT", 6379)), 
-    db=0, 
-    decode_responses=True
-)
+# Initialize Redis client using REDIS_URL for Upstash SSL compatibility
+redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 def get_fallback_llms() -> List[Tuple[object, str]]:
     llms = []
