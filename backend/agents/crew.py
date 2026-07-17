@@ -20,6 +20,8 @@ os.environ["LITELLM_DROP_PARAMS"] = "True"
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 def get_fallback_llms() -> List[Tuple[object, str]]:
+    # Completely removed OpenAI to prevent 401 fallback errors.
+    # Using LLM class with drop_params=True to prevent Mistral cache_breakpoint errors.
     llms = []
     mistral_key = os.getenv("MISTRAL_API_KEY")
     if mistral_key:
@@ -27,8 +29,7 @@ def get_fallback_llms() -> List[Tuple[object, str]]:
             LLM(
                 model="mistral/mistral-large-latest",
                 api_key=mistral_key,
-                drop_params=True,
-                cache=False  # <--- DISABLES CREWAI'S CACHE WHICH ADDS THE INVALID PARAMETER
+                drop_params=True  # <--- THIS IS THE CORRECT FIX
             ),
             "mistral-large-latest"
         ))
