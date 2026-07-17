@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Assuming LeadData is passed in, adjust the import if necessary
-// import { LeadData } from '../types';
-
 interface LeadTableProps {
-  leads: any[]; // Using any[] to avoid type pathing issues, swap with LeadData[] if you have it set up
+  leads: any[]; 
   isLoading: boolean;
 }
 
@@ -29,7 +26,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
               <th style={{ padding: '10px', width: '30px' }}></th>
               <th style={{ padding: '10px' }}>Entity Name</th>
               <th style={{ padding: '10px' }}>Classification</th>
-              <th style={{ padding: '10px' }}>Source URL</th>
+              {/* Removed Source URL header */}
             </tr>
           </thead>
           <tbody>
@@ -39,8 +36,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
                 <React.Fragment key={lead.id}>
                   {/* Main Row with Data-Flash Animation */}
                   <motion.tr
-                    initial={{ backgroundColor: 'rgba(0, 255, 136, 0.2)' }} // Start with green glow
-                    animate={{ backgroundColor: 'rgba(0, 255, 136, 0)' }}    // Fade to transparent
+                    initial={{ backgroundColor: 'rgba(0, 255, 136, 0.2)' }} 
+                    animate={{ backgroundColor: 'rgba(0, 255, 136, 0)' }}    
                     transition={{ duration: 1.5, ease: 'easeOut' }}
                     onClick={() => toggleExpand(lead.id)}
                     style={{ cursor: 'pointer', borderBottom: '1px solid #222' }}
@@ -52,11 +49,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
                     </td>
                     <td style={{ padding: '12px 10px', fontWeight: 500 }}>{lead.entity_name}</td>
                     <td style={{ padding: '12px 10px', color: '#86868b' }}>{lead.classification}</td>
-                    <td style={{ padding: '12px 10px', color: '#86868b', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <a href={lead.source_url} target="_blank" rel="noreferrer" style={{ color: '#61dafb', textDecoration: 'none' }}>
-                        {lead.source_url.replace('https://', '').replace('http://', '').split('/')[0]}
-                      </a>
-                    </td>
+                    {/* Removed Source URL cell */}
                   </motion.tr>
                   
                   {/* Expandable JSON Payload Row */}
@@ -68,7 +61,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                       >
-                        <td colSpan={4} style={{ padding: 0, border: 'none' }}>
+                        {/* Updated colSpan to 3 since we removed a column */}
+                        <td colSpan={3} style={{ padding: 0, border: 'none' }}>
                           <motion.div
                             initial={{ y: -10 }}
                             animate={{ y: 0 }}
