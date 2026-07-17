@@ -20,3 +20,4 @@ slowapi
 passlib[bcrypt]
 bcrypt
 boto3
+litellm
