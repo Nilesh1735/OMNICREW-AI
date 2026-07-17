@@ -122,7 +122,7 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             
             try:
                 crew = build_crew(llm_obj)
-                result = await asyncio.wait_for(asyncio.to_thread(crew.kickoff), timeout=120.0)
+                result = await asyncio.wait_for(asyncio.to_thread(crew.kickoff), timeout=240.0)
                 last_exception = None
                 
                 try:
