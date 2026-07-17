@@ -1,0 +1,108 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: autobrowse_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: autobrowse_db
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  postgresql:
+    image: postgres:15
+    container_name: autobrowse_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: autobrowse_auth
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7-alpine
+    container_name: autobrowse_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    container_name: autobrowse_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - postgresql
+      - redis
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root_password
+      - MYSQL_DB=autobrowse_db
+      - POSTGRES_HOST=postgresql
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=autobrowse_auth
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=omnicrew-ai-prod
+    volumes:
+      - ./backend:/app
+
+  celery_worker:
+    build: ./backend
+    container_name: autobrowse_celery
+    restart: always
+    depends_on:
+      - backend
+      - redis
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root_password
+      - MYSQL_DB=autobrowse_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=omnicrew-ai-prod
+    volumes:
+      - ./backend:/app
+    command: celery -A celery_worker.celery_app worker --loglevel=info --concurrency=1
+
+  frontend:
+    build: ./frontend
+    container_name: autobrowse_frontend
+    restart: always
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  postgres_data:
