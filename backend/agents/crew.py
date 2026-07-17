@@ -6,7 +6,8 @@ import hashlib
 import redis
 from typing import Optional, List, Tuple
 from pydantic import ValidationError
-from crewai import Agent, Task, Crew, Process
+# Updated to import LLM directly from crewai
+from crewai import Agent, Task, Crew, Process, LLM
 from agents.tools import WebScraperTool
 from models.schemas import LeadData, AgentLog
 from db.mysql_client import insert_lead
@@ -16,11 +17,20 @@ logger = logging.getLogger(__name__)
 
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
-def get_fallback_llms() -> List[Tuple[str, str]]:
+def get_fallback_llms() -> List[Tuple[object, str]]:
     # Completely removed OpenAI to prevent 401 fallback errors.
+    # Using LLM class with drop_params=True to prevent Mistral cache_breakpoint errors.
     llms = []
-    if os.getenv("MISTRAL_API_KEY"):
-        llms.append(("mistral/mistral-large-latest", "mistral-large-latest"))
+    mistral_key = os.getenv("MISTRAL_API_KEY")
+    if mistral_key:
+        llms.append((
+            LLM(
+                model="mistral/mistral-large-latest",
+                api_key=mistral_key,
+                drop_params=True  # <--- THIS IS THE CRITICAL FIX
+            ),
+            "mistral-large-latest"
+        ))
     return llms
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
@@ -31,18 +41,18 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         await manager(task_id, AgentLog(agent_name="System", action="Error", thought_process="No LLMs configured.").model_dump(mode="json"))
         return
 
-    def build_crew(llm_model: str):
+    def build_crew(llm_obj: object):
         researcher = Agent(
             role='Autonomous Web Researcher',
             goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If not, use internal knowledge or reasoning to find the answer.',
             backstory='An expert AI agent capable of navigating the web and using internal knowledge to find solutions when no starting point is given.',
-            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_model, max_iter=5
+            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_obj, max_iter=5
         )
         extraction_analyst = Agent(
             role='Extraction Analyst',
             goal='Analyze the scraped text or research data and output ONLY a valid JSON object.',
             backstory='A strict data engineer who finds specific entities in text and formats them flawlessly into JSON.',
-            verbose=True, allow_delegation=False, llm=llm_model, max_iter=5
+            verbose=True, allow_delegation=False, llm=llm_obj, max_iter=5
         )
 
         if target_url:
@@ -95,14 +105,14 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         result = None
         last_exception = None
 
-        for index, (llm_model, llm_name) in enumerate(llms_to_try):
-            logger.info(f"Preparing to build crew with LLM model: {llm_model}")
+        for index, (llm_obj, llm_name) in enumerate(llms_to_try):
+            logger.info(f"Preparing to build crew with LLM object of type: {type(llm_obj)}")
             await manager(task_id, AgentLog(
                 agent_name="System", action="LLM Routing", thought_process=f"Engaging AI engine: {llm_name}..."
             ).model_dump(mode="json"))
             
             try:
-                crew = build_crew(llm_model)
+                crew = build_crew(llm_obj)
                 result = await asyncio.wait_for(asyncio.to_thread(crew.kickoff), timeout=120.0)
                 last_exception = None
                 
