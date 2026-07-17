@@ -6,7 +6,8 @@ import hashlib
 import redis
 from typing import Optional, List, Tuple
 from pydantic import ValidationError
-from crewai import Agent, Task, Crew, Process, LLM
+from crewai import Agent, Task, Crew, Process
+from langchain_openai import ChatOpenAI
 from agents.tools import WebScraperTool
 from models.schemas import LeadData, AgentLog
 from db.mysql_client import insert_lead
@@ -14,22 +15,19 @@ from utils.s3_client import archive_to_s3
 
 logger = logging.getLogger(__name__)
 
-# Force LiteLLM to drop unsupported parameters (like cache_breakpoint for Mistral)
-os.environ["LITELLM_DROP_PARAMS"] = "True"
-
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 def get_fallback_llms() -> List[Tuple[object, str]]:
-    # Completely removed OpenAI to prevent 401 fallback errors.
-    # Using LLM class with drop_params=True to prevent Mistral cache_breakpoint errors.
+    # Using LangChain ChatOpenAI pointing to Mistral's OpenAI-compatible endpoint.
+    # This bypasses CrewAI's buggy LLM wrapper and the cache_breakpoint injection.
     llms = []
     mistral_key = os.getenv("MISTRAL_API_KEY")
     if mistral_key:
         llms.append((
-            LLM(
-                model="mistral/mistral-large-latest",
+            ChatOpenAI(
+                model="mistral-large-latest",
                 api_key=mistral_key,
-                drop_params=True  # <--- THIS IS THE CORRECT FIX
+                base_url="https://api.mistral.ai/v1/"
             ),
             "mistral-large-latest"
         ))
