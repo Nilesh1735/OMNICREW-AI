@@ -1,4 +1,4 @@
-from langchain_core.tools import BaseTool
+from crewai.tools import BaseTool
 import logging
 import json
 import requests
@@ -13,7 +13,6 @@ class WebScraperTool(BaseTool):
     description: str = "Useful for navigating to a specific URL and extracting all visible text content from the web page."
 
     def _run(self, url: str) -> str:
-        """Synchronous fallback using requests (used by CrewAI sync execution)."""
         if url.strip().startswith("{"):
             try:
                 data = json.loads(url)
@@ -54,6 +53,5 @@ class WebScraperTool(BaseTool):
             return f"Failed to scrape {url}. Error: {str(e)}"
 
     async def _arun(self, url: str) -> str:
-        """Asynchronous execution. Uses requests fallback for cloud deployment."""
         import asyncio
         return await asyncio.to_thread(self._run, url)

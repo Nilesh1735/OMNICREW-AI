@@ -6,8 +6,7 @@ import hashlib
 import redis
 from typing import Optional, List, Tuple
 from pydantic import ValidationError
-# Updated for CrewAI 1.x: Import LLM directly from crewai
-from crewai import Agent, Task, Crew, Process, LLM
+from crewai import Agent, Task, Crew, Process
 from agents.tools import WebScraperTool
 from models.schemas import LeadData, AgentLog
 from db.mysql_client import insert_lead
@@ -15,32 +14,16 @@ from utils.s3_client import archive_to_s3
 
 logger = logging.getLogger(__name__)
 
-# Initialize Redis client using REDIS_URL for Upstash SSL compatibility
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
-def get_fallback_llms() -> List[Tuple[object, str]]:
+def get_fallback_llms() -> List[Tuple[str, str]]:
+    # CrewAI 1.x accepts model names as strings and uses LiteLLM under the hood.
+    # It will automatically pick up MISTRAL_API_KEY and OPENAI_API_KEY from the environment.
     llms = []
-    mistral_key = os.getenv("MISTRAL_API_KEY")
-    if mistral_key:
-        llms.append((
-            LLM(
-                # CrewAI uses LiteLLM under the hood, so we add the 'mistral/' provider prefix
-                model="mistral/mistral-large-latest",
-                api_key=mistral_key,
-                base_url="https://api.mistral.ai/v1/"
-            ),
-            "mistral-large-latest"
-        ))
-    openai_key = os.getenv("OPENAI_API_KEY")
-    if openai_key and openai_key != "sk-your_openai_key_here":
-        llms.append((
-            LLM(
-                model="openai/gpt-4o-mini",
-                api_key=openai_key
-            ),
-            "gpt-4o-mini"
-        ))
-        
+    if os.getenv("MISTRAL_API_KEY"):
+        llms.append(("mistral/mistral-large-latest", "mistral-large-latest"))
+    if os.getenv("OPENAI_API_KEY") and os.getenv("OPENAI_API_KEY") != "sk-your_openai_key_here":
+        llms.append(("openai/gpt-4o-mini", "gpt-4o-mini"))
     return llms
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
@@ -51,18 +34,18 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         await manager(task_id, AgentLog(agent_name="System", action="Error", thought_process="No LLMs configured.").model_dump(mode="json"))
         return
 
-    def build_crew(llm_obj):
+    def build_crew(llm_model: str):
         researcher = Agent(
             role='Autonomous Web Researcher',
             goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If not, use internal knowledge or reasoning to find the answer.',
             backstory='An expert AI agent capable of navigating the web and using internal knowledge to find solutions when no starting point is given.',
-            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_obj, max_iter=5
+            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_model, max_iter=5
         )
         extraction_analyst = Agent(
             role='Extraction Analyst',
             goal='Analyze the scraped text or research data and output ONLY a valid JSON object.',
             backstory='A strict data engineer who finds specific entities in text and formats them flawlessly into JSON.',
-            verbose=True, allow_delegation=False, llm=llm_obj, max_iter=5
+            verbose=True, allow_delegation=False, llm=llm_model, max_iter=5
         )
 
         if target_url:
@@ -98,7 +81,6 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         agent_name="System", action="Executing Crew", thought_process="Secure connection established. Initializing AI agents."
     ).model_dump(mode="json"))
 
-    # --- REDIS LLM CACHING LOGIC ---
     cache_key = f"llm_cache:{hashlib.md5(task_description.encode('utf-8')).hexdigest()}"
     result_str = None
     
@@ -106,27 +88,24 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         cached_result = redis_client.get(cache_key)
         if cached_result:
             await manager(task_id, AgentLog(
-                agent_name="System", 
-                action="Cache Hit", 
-                thought_process="Cache hit! Returning cached result to save API tokens."
+                agent_name="System", action="Cache Hit", thought_process="Cache hit! Returning cached result to save API tokens."
             ).model_dump(mode="json"))
             result_str = cached_result
     except Exception as e:
         logger.warning(f"Redis cache read failed: {str(e)}")
 
-    # If no cache, proceed with LLM execution
     if result_str is None:
         result = None
         last_exception = None
 
-        for index, (llm_obj, llm_name) in enumerate(llms_to_try):
-            logger.info(f"Preparing to build crew with LLM object of type: {type(llm_obj)}")
+        for index, (llm_model, llm_name) in enumerate(llms_to_try):
+            logger.info(f"Preparing to build crew with LLM model: {llm_model}")
             await manager(task_id, AgentLog(
                 agent_name="System", action="LLM Routing", thought_process=f"Engaging AI engine: {llm_name}..."
             ).model_dump(mode="json"))
             
             try:
-                crew = build_crew(llm_obj)
+                crew = build_crew(llm_model)
                 result = await asyncio.wait_for(asyncio.to_thread(crew.kickoff), timeout=120.0)
                 last_exception = None
                 
@@ -173,13 +152,11 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
 
         result_str = str(result).strip()
         
-        # Save to Redis Cache (expires in 1 hour / 3600 seconds)
         try:
             redis_client.setex(cache_key, 3600, result_str)
         except Exception as e:
             logger.warning(f"Redis cache write failed: {str(e)}")
 
-    # --- PYDANTIC VALIDATION & SAVING ---
     await manager(task_id, AgentLog(
         agent_name="Manager", action="Validation", thought_process="Parsing final output and validating schema."
     ).model_dump(mode="json"))
