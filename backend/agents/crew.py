@@ -17,13 +17,10 @@ logger = logging.getLogger(__name__)
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 def get_fallback_llms() -> List[Tuple[str, str]]:
-    # CrewAI 1.x accepts model names as strings and uses LiteLLM under the hood.
-    # It will automatically pick up MISTRAL_API_KEY and OPENAI_API_KEY from the environment.
+    # Completely removed OpenAI to prevent 401 fallback errors.
     llms = []
     if os.getenv("MISTRAL_API_KEY"):
         llms.append(("mistral/mistral-large-latest", "mistral-large-latest"))
-    if os.getenv("OPENAI_API_KEY") and os.getenv("OPENAI_API_KEY") != "sk-your_openai_key_here":
-        llms.append(("openai/gpt-4o-mini", "gpt-4o-mini"))
     return llms
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
