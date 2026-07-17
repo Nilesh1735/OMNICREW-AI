@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { exportToCSV } from '../utils/csvExporter'; // Import your CSV utility
+import { exportToCSV } from '../utils/csvExporter';
 
 interface LeadTableProps {
   leads: any[]; 
@@ -22,14 +22,31 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Export Button Header */}
-      <div className="flex justify-end mb-2">
+      {/* Export Button Header - Styled for Terminal UI */}
+      <div className="flex justify-end mb-3">
         <button 
           onClick={handleExport} 
           disabled={leads.length === 0 || isLoading}
-          className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-primary hover:border-primary/50 border border-border rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 12px',
+            fontSize: '11px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            fontFamily: 'monospace', // Terminal font feel
+            color: (leads.length === 0 || isLoading) ? '#444' : '#ff9f43', // Orange accent
+            backgroundColor: '#111',
+            border: '1px solid #333',
+            borderRadius: '4px',
+            cursor: (leads.length === 0 || isLoading) ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease',
+            opacity: (leads.length === 0 || isLoading) ? 0.5 : 1,
+          }}
         >
-          Export CSV
+          <span style={{ fontSize: '14px' }}>⤓</span> Export CSV
         </button>
       </div>
 
