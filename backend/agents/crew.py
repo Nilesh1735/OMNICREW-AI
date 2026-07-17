@@ -15,14 +15,12 @@ from utils.s3_client import archive_to_s3
 
 logger = logging.getLogger(__name__)
 
-# CRITICAL FIX: Force LiteLLM to drop unsupported parameters (like cache_breakpoint for Mistral)
+# Force LiteLLM to drop unsupported parameters
 litellm.drop_params = True
 
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 def get_fallback_llms() -> List[Tuple[str, str]]:
-    # CrewAI 1.x accepts model names as strings.
-    # litellm.drop_params = True will handle the cache_breakpoint error.
     llms = []
     if os.getenv("MISTRAL_API_KEY"):
         llms.append(("mistral/mistral-large-latest", "mistral-large-latest"))
@@ -77,7 +75,12 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             agent=extraction_analyst
         )
 
-        return Crew(agents=[researcher, extraction_analyst], tasks=[research_task, extraction_task], process=Process.sequential)
+        return Crew(
+            agents=[researcher, extraction_analyst], 
+            tasks=[research_task, extraction_task], 
+            process=Process.sequential,
+            cache=False  # <--- CRITICAL FIX: Disables cache_breakpoint injection
+        )
 
     await manager(task_id, AgentLog(
         agent_name="System", action="Executing Crew", thought_process="Secure connection established. Initializing AI agents."
