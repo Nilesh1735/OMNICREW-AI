@@ -4,10 +4,10 @@ import asyncio
 import os
 import hashlib
 import redis
+import litellm
 from typing import Optional, List, Tuple
 from pydantic import ValidationError
 from crewai import Agent, Task, Crew, Process
-from langchain_openai import ChatOpenAI
 from agents.tools import WebScraperTool
 from models.schemas import LeadData, AgentLog
 from db.mysql_client import insert_lead
@@ -15,22 +15,17 @@ from utils.s3_client import archive_to_s3
 
 logger = logging.getLogger(__name__)
 
+# CRITICAL FIX: Force LiteLLM to drop unsupported parameters (like cache_breakpoint for Mistral)
+litellm.drop_params = True
+
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
-def get_fallback_llms() -> List[Tuple[object, str]]:
-    # Using LangChain ChatOpenAI pointing to Mistral's OpenAI-compatible endpoint.
-    # This bypasses CrewAI's buggy LLM wrapper and the cache_breakpoint injection.
+def get_fallback_llms() -> List[Tuple[str, str]]:
+    # CrewAI 1.x accepts model names as strings.
+    # litellm.drop_params = True will handle the cache_breakpoint error.
     llms = []
-    mistral_key = os.getenv("MISTRAL_API_KEY")
-    if mistral_key:
-        llms.append((
-            ChatOpenAI(
-                model="mistral-large-latest",
-                api_key=mistral_key,
-                base_url="https://api.mistral.ai/v1/"
-            ),
-            "mistral-large-latest"
-        ))
+    if os.getenv("MISTRAL_API_KEY"):
+        llms.append(("mistral/mistral-large-latest", "mistral-large-latest"))
     return llms
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
@@ -41,18 +36,18 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         await manager(task_id, AgentLog(agent_name="System", action="Error", thought_process="No LLMs configured.").model_dump(mode="json"))
         return
 
-    def build_crew(llm_obj: object):
+    def build_crew(llm_model: str):
         researcher = Agent(
             role='Autonomous Web Researcher',
             goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If not, use internal knowledge or reasoning to find the answer.',
             backstory='An expert AI agent capable of navigating the web and using internal knowledge to find solutions when no starting point is given.',
-            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_obj, max_iter=5
+            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_model, max_iter=5
         )
         extraction_analyst = Agent(
             role='Extraction Analyst',
             goal='Analyze the scraped text or research data and output ONLY a valid JSON object.',
             backstory='A strict data engineer who finds specific entities in text and formats them flawlessly into JSON.',
-            verbose=True, allow_delegation=False, llm=llm_obj, max_iter=5
+            verbose=True, allow_delegation=False, llm=llm_model, max_iter=5
         )
 
         if target_url:
@@ -105,14 +100,14 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         result = None
         last_exception = None
 
-        for index, (llm_obj, llm_name) in enumerate(llms_to_try):
-            logger.info(f"Preparing to build crew with LLM object of type: {type(llm_obj)}")
+        for index, (llm_model, llm_name) in enumerate(llms_to_try):
+            logger.info(f"Preparing to build crew with LLM model: {llm_model}")
             await manager(task_id, AgentLog(
                 agent_name="System", action="LLM Routing", thought_process=f"Engaging AI engine: {llm_name}..."
             ).model_dump(mode="json"))
             
             try:
-                crew = build_crew(llm_obj)
+                crew = build_crew(llm_model)
                 result = await asyncio.wait_for(asyncio.to_thread(crew.kickoff), timeout=120.0)
                 last_exception = None
                 
