@@ -1,4 +1,5 @@
 import aiomysql
+import pymysql
 import os
 import logging
 import json
@@ -60,6 +61,37 @@ async def insert_lead(lead: LeadData):
                 str(lead.source_url),
                 data_hash
             ))
+
+def insert_lead_sync(lead: LeadData):
+    """Synchronous insert for background tasks to avoid asyncio loop conflicts."""
+    payload_str = json.dumps(lead.data_payload, sort_keys=True)
+    hash_string = f"{lead.entity_name}:{payload_str}"
+    data_hash = hashlib.md5(hash_string.encode('utf-8')).hexdigest()
+    
+    conn = pymysql.connect(
+        host=os.getenv("MYSQL_HOST", "localhost"),
+        port=int(os.getenv("MYSQL_PORT", 3306)),
+        user=os.getenv("MYSQL_USER", "root"),
+        password=os.getenv("MYSQL_PASSWORD", "root_password"),
+        db=os.getenv("MYSQL_DB", "autobrowse_db"),
+        autocommit=True
+    )
+    try:
+        with conn.cursor() as cur:
+            sql = """
+                INSERT IGNORE INTO leads (user_id, entity_name, data_payload, classification, source_url, data_hash)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cur.execute(sql, (
+                lead.user_id, 
+                lead.entity_name, 
+                json.dumps(lead.data_payload), 
+                lead.classification, 
+                str(lead.source_url),
+                data_hash
+            ))
+    finally:
+        conn.close()
 
 async def get_leads_from_db(user_id: str) -> List[LeadData]:
     pool = await get_pool()

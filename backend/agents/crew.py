@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from crewai import Agent, Task, Crew, Process, LLM
 from agents.tools import WebScraperTool
 from models.schemas import LeadData, AgentLog
-from db.mysql_client import insert_lead
+from db.mysql_client import insert_lead_sync
 from utils.s3_client import archive_to_s3
 
 logger = logging.getLogger(__name__)
@@ -48,14 +48,14 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If not, use internal knowledge or reasoning to find the answer.',
             backstory='An expert AI agent capable of navigating the web and using internal knowledge to find solutions when no starting point is given.',
             verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_obj, max_iter=5,
-            cache=False  # <--- DISABLED CACHE AT AGENT LEVEL
+            cache=False
         )
         extraction_analyst = Agent(
             role='Extraction Analyst',
             goal='Analyze the scraped text or research data and output ONLY a valid JSON object.',
             backstory='A strict data engineer who finds specific entities in text and formats them flawlessly into JSON.',
             verbose=True, allow_delegation=False, llm=llm_obj, max_iter=5,
-            cache=False  # <--- DISABLED CACHE AT AGENT LEVEL
+            cache=False
         )
 
         if target_url:
@@ -89,7 +89,7 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             agents=[researcher, extraction_analyst], 
             tasks=[research_task, extraction_task], 
             process=Process.sequential,
-            cache=False  # <--- DISABLED CACHE AT CREW LEVEL
+            cache=False
         )
 
     await manager(task_id, AgentLog(
@@ -187,7 +187,10 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         lead_dict['user_id'] = user_id
         lead_dict['source_url'] = target_url if target_url else "https://autonomous.omnicrew.ai"
         lead_data = LeadData(**lead_dict)
-        await insert_lead(lead_data)
+        
+        # Use synchronous insert to avoid asyncio loop conflicts in background tasks
+        insert_lead_sync(lead_data)
+        
         s3_filename = f"omnicrew-runs/{task_id}.json"
         archive_to_s3(content=result_str, object_name=s3_filename)
         await manager(task_id, AgentLog(
