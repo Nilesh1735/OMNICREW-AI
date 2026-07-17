@@ -6,9 +6,8 @@ import hashlib
 import redis
 from typing import Optional, List, Tuple
 from pydantic import ValidationError
-from crewai import Agent, Task, Crew, Process
-# from langchain_community.llms import Ollama  # Disabled for free cloud deployment
-from langchain_openai import ChatOpenAI
+# Updated for CrewAI 1.x: Import LLM directly from crewai
+from crewai import Agent, Task, Crew, Process, LLM
 from agents.tools import WebScraperTool
 from models.schemas import LeadData, AgentLog
 from db.mysql_client import insert_lead
@@ -24,38 +23,24 @@ def get_fallback_llms() -> List[Tuple[object, str]]:
     mistral_key = os.getenv("MISTRAL_API_KEY")
     if mistral_key:
         llms.append((
-            ChatOpenAI(
-                model="mistral-large-latest",
+            LLM(
+                # CrewAI uses LiteLLM under the hood, so we add the 'mistral/' provider prefix
+                model="mistral/mistral-large-latest",
                 api_key=mistral_key,
-                base_url="https://api.mistral.ai/v1/",
-                max_retries=2,
-                request_timeout=60
+                base_url="https://api.mistral.ai/v1/"
             ),
             "mistral-large-latest"
         ))
     openai_key = os.getenv("OPENAI_API_KEY")
     if openai_key and openai_key != "sk-your_openai_key_here":
         llms.append((
-            ChatOpenAI(
-                model="gpt-4o-mini", 
-                temperature=0.7, 
-                openai_api_key=openai_key, 
-                max_retries=2, 
-                request_timeout=60
+            LLM(
+                model="openai/gpt-4o-mini",
+                api_key=openai_key
             ),
             "gpt-4o-mini"
         ))
         
-    # --- OLLAMA DISABLED FOR FREE CLOUD DEPLOYMENT ---
-    # llms.append((
-    #     Ollama(
-    #         model="qwen2.5-coder:7b", 
-    #         base_url="http://ollama:11434", 
-    #         timeout=600
-    #     ),
-    #     "Local Ollama (qwen2.5-coder:7b)"
-    # ))
-    
     return llms
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
