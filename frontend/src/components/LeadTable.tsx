@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download } from 'lucide-react'; // Import icon
 import { exportToCSV } from '../utils/csvExporter'; // Import your CSV utility
 
 interface LeadTableProps {
@@ -17,7 +16,6 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
 
   const handleExport = () => {
     if (leads.length > 0) {
-      // Assuming your csvExporter takes the data and a filename
       exportToCSV(leads, 'omnicrew_extracted_entities.csv');
     }
   };
@@ -29,9 +27,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
         <button 
           onClick={handleExport} 
           disabled={leads.length === 0 || isLoading}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-primary hover:border-primary/50 border border-border rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <Download size={14} />
           Export CSV
         </button>
       </div>
