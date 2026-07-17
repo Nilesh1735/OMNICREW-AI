@@ -1,6 +1,7 @@
 import { LeadData } from '../types';
 
-export const exportToCSV = (leads: LeadData[]) => {
+// Added filename parameter to match the call in LeadTable.tsx
+export const exportToCSV = (leads: LeadData[], filename: string = `omnicrew_extraction_${Date.now()}.csv`) => {
   if (!leads || leads.length === 0) {
     alert('No data available to export.');
     return;
@@ -37,13 +38,13 @@ export const exportToCSV = (leads: LeadData[]) => {
     return row.join(',');
   });
 
-  // 3. Combine and trigger download
+  // 3. Combine and trigger download using the provided filename
   const csvContent = [headers.join(','), ...rows].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `omnicrew_extraction_${Date.now()}.csv`);
+  link.setAttribute('download', filename); // Use the passed filename here
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
