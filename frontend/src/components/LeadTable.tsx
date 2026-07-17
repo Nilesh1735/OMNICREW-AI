@@ -26,7 +26,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
               <th style={{ padding: '10px', width: '30px' }}></th>
               <th style={{ padding: '10px' }}>Entity Name</th>
               <th style={{ padding: '10px' }}>Classification</th>
-              {/* Removed Source URL header */}
+              <th style={{ padding: '10px' }}>Source URL</th>
             </tr>
           </thead>
           <tbody>
@@ -49,7 +49,11 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
                     </td>
                     <td style={{ padding: '12px 10px', fontWeight: 500 }}>{lead.entity_name}</td>
                     <td style={{ padding: '12px 10px', color: '#86868b' }}>{lead.classification}</td>
-                    {/* Removed Source URL cell */}
+                    <td style={{ padding: '12px 10px', color: '#86868b', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <a href={lead.source_url} target="_blank" rel="noreferrer" style={{ color: '#61dafb', textDecoration: 'none' }}>
+                        {lead.source_url.replace('https://', '').replace('http://', '').split('/')[0]}
+                      </a>
+                    </td>
                   </motion.tr>
                   
                   {/* Expandable JSON Payload Row */}
@@ -61,8 +65,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, isLoading }) => {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                       >
-                        {/* Updated colSpan to 3 since we removed a column */}
-                        <td colSpan={3} style={{ padding: 0, border: 'none' }}>
+                        {/* Updated colSpan back to 4 since we added the column back */}
+                        <td colSpan={4} style={{ padding: 0, border: 'none' }}>
                           <motion.div
                             initial={{ y: -10 }}
                             animate={{ y: 0 }}
