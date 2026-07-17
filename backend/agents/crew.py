@@ -80,7 +80,7 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
                         'Output ONLY a valid JSON object with these exact top-level keys: "entity_name", "data_payload", "classification", "source_url". '
                         'The "entity_name" should be the main subject (e.g., the book title). '
                         'The "data_payload" MUST be a flat dictionary of key-value pairs answering the task. '
-                        'The "source_url" MUST be the exact URL you visited to get the information (if you used the web scraper tool) or "https://en.wikipedia.org/wiki/Main_Page" if you used internal knowledge. '
+                        'The "source_url" MUST be the exact URL you visited or attempted to visit with the web scraper tool. If you did not use the scraper and relied entirely on internal knowledge, output "Internal Knowledge". '
                         'Assign a "classification" of "Medium". Do not include any other text or markdown.',
             expected_output='A strict JSON object.', 
             agent=extraction_analyst
@@ -149,8 +149,8 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
                     ).model_dump(mode="json"))
                 break
             except asyncio.TimeoutError:
-                logger.error(f"{llm_name} timed out after 120 seconds.")
-                last_exception = Exception("Agent execution timed out (120s limit).")
+                logger.error(f"{llm_name} timed out after 240 seconds.")
+                last_exception = Exception("Agent execution timed out (240s limit).")
                 await manager(task_id, AgentLog(
                     agent_name="System", action="LLM Fallback", thought_process="Compute node unresponsive. Rerouting pipeline..."
                 ).model_dump(mode="json"))
@@ -187,9 +187,9 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         lead_dict = json.loads(clean_json_str)
         lead_dict['user_id'] = user_id
         
-        # Use the URL provided by the AI. If the AI didn't provide one, fallback to target_url or a placeholder.
+        # Use the URL provided by the AI. If the AI didn't provide one, fallback to target_url or "Internal Knowledge".
         if not lead_dict.get('source_url'):
-            lead_dict['source_url'] = target_url if target_url else "https://autonomous.omnicrew.ai"
+            lead_dict['source_url'] = target_url if target_url else "Internal Knowledge"
             
         lead_data = LeadData(**lead_dict)
         
