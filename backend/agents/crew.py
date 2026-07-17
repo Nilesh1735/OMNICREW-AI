@@ -26,7 +26,7 @@ def get_fallback_llms() -> List[Tuple[object, str]]:
     if mistral_key:
         llms.append((
             LLM(
-                model="openai/mistral-large-latest",  # <--- TRICK CREWAI TO PREVENT cache_breakpoint
+                model="openai/mistral-large-latest",  # Trick CrewAI to prevent cache_breakpoint
                 api_key=mistral_key,
                 base_url="https://api.mistral.ai/v1/"
             ),
@@ -47,13 +47,15 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             role='Autonomous Web Researcher',
             goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If not, use internal knowledge or reasoning to find the answer.',
             backstory='An expert AI agent capable of navigating the web and using internal knowledge to find solutions when no starting point is given.',
-            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_obj, max_iter=5
+            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_obj, max_iter=5,
+            cache=False  # <--- DISABLED CACHE AT AGENT LEVEL
         )
         extraction_analyst = Agent(
             role='Extraction Analyst',
             goal='Analyze the scraped text or research data and output ONLY a valid JSON object.',
             backstory='A strict data engineer who finds specific entities in text and formats them flawlessly into JSON.',
-            verbose=True, allow_delegation=False, llm=llm_obj, max_iter=5
+            verbose=True, allow_delegation=False, llm=llm_obj, max_iter=5,
+            cache=False  # <--- DISABLED CACHE AT AGENT LEVEL
         )
 
         if target_url:
@@ -87,7 +89,7 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             agents=[researcher, extraction_analyst], 
             tasks=[research_task, extraction_task], 
             process=Process.sequential,
-            cache=False
+            cache=False  # <--- DISABLED CACHE AT CREW LEVEL
         )
 
     await manager(task_id, AgentLog(
