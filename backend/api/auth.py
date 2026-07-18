@@ -48,4 +48,7 @@ def login(user: UserLogin):
     secret = os.getenv("JWT_SECRET", "supersecretjwt12345")
     token = jwt.encode({"sub": str(db_user['id'])}, secret, algorithm="HS256")
     
+    # --- ADDED DEBUG LOG ---
+    logger.info(f"Returning real token: {token[:20]}...")
+    
     return {"token": token, "user_id": str(db_user['id'])}
