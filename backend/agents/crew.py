@@ -8,16 +8,14 @@ import litellm
 from typing import Optional, List, Tuple
 from pydantic import ValidationError
 from crewai import Agent, Task, Crew, Process, LLM
-from agents.tools import WebScraperTool
+from agents.tools import WebScraperTool, SnovEmailFinderTool  # <-- Imported both tools
 from models.schemas import LeadData, AgentLog
 from db.mysql_client import insert_lead_sync
 from utils.s3_client import archive_to_s3
 
 logger = logging.getLogger(__name__)
 
-# Force LiteLLM to drop unsupported parameters
 litellm.drop_params = True
-
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 def get_fallback_llms() -> List[Tuple[object, str]]:
@@ -26,7 +24,7 @@ def get_fallback_llms() -> List[Tuple[object, str]]:
     if mistral_key:
         llms.append((
             LLM(
-                model="openai/mistral-large-latest",  # Trick CrewAI to prevent cache_breakpoint
+                model="openai/mistral-large-latest",
                 api_key=mistral_key,
                 base_url="https://api.mistral.ai/v1/"
             ),
@@ -36,6 +34,7 @@ def get_fallback_llms() -> List[Tuple[object, str]]:
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
     scraper_tool = WebScraperTool()
+    email_tool = SnovEmailFinderTool()  # <-- Instantiated the new tool
     llms_to_try = get_fallback_llms()
     
     if not llms_to_try:
@@ -45,9 +44,11 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
     def build_crew(llm_obj: object):
         researcher = Agent(
             role='Autonomous Web Researcher',
-            goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If not, use internal knowledge or reasoning to find the answer.',
-            backstory='An expert AI agent capable of navigating the web and using internal knowledge to find solutions when no starting point is given.',
-            verbose=True, allow_delegation=False, tools=[scraper_tool], llm=llm_obj, max_iter=5,
+            goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If the task asks for an email, scrape the page to find the person\'s name and company, then use the Email Finder Tool.',
+            backstory='An expert AI agent capable of navigating the web, extracting B2B leads, and using APIs to enrich data.',
+            verbose=True, allow_delegation=False, 
+            tools=[scraper_tool, email_tool],  # <-- Gave both tools to researcher
+            llm=llm_obj, max_iter=10,  # Increased max_iter so it has turns to scrape THEN call Snov.io
             cache=False
         )
         extraction_analyst = Agent(
@@ -187,13 +188,10 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         lead_dict = json.loads(clean_json_str)
         lead_dict['user_id'] = user_id
         
-        # Use the URL provided by the AI. If the AI didn't provide one, fallback to target_url or "Internal Knowledge".
         if not lead_dict.get('source_url'):
             lead_dict['source_url'] = target_url if target_url else "Internal Knowledge"
             
         lead_data = LeadData(**lead_dict)
-        
-        # Use synchronous insert to avoid asyncio loop conflicts in background tasks
         insert_lead_sync(lead_data)
         
         s3_filename = f"omnicrew-runs/{task_id}.json"

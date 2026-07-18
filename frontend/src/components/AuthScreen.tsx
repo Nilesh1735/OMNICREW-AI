@@ -1,3 +1,4 @@
+import { PasswordInput } from "./PasswordInput";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -190,7 +191,7 @@ const AuthScreen: React.FC = () => {
               </div>
               <div className="input-group">
                 <label>[{isLogin ? '02' : '03'}] Password</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" required />
+                <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" required />
               </div>
               <button type="submit" className="start-btn auth-submit-btn" disabled={isLoading}>
                 {isLoading ? 'PROCESSING...' : (isLogin ? 'ACCESS_TERMINAL' : 'CREATE_ACCOUNT')}
