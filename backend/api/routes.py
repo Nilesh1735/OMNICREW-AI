@@ -1,6 +1,5 @@
-import jwt
-from fastapi import APIRouter, HTTPException, Depends, Request
-from slowapi import Limis, _rate_limit_exceeded_handler
+from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
+from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from models.schemas import TaskResponse, LeadData
 from db.mysql_client import get_leads_from_db, get_pool
@@ -10,6 +9,7 @@ import uuid
 import logging
 import aiomysql
 import os
+import jwt
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
