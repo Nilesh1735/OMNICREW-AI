@@ -11,7 +11,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, React.InputHTMLA
           type={showPassword ? "text" : "password"}
           ref={ref}
           className={className}
-          style={{ paddingRight: '2.5rem' }} // Add padding so text doesn't hit the eye
+          style={{ paddingRight: '2.5rem' }}
           {...props}
         />
         <button
