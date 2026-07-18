@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: () => void;
+  login: (token?: string) => void;
   logout: () => void;
 }
 
@@ -19,8 +19,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  const login = () => {
-    localStorage.setItem('omnicrew_token', 'mock_token_123');
+  const login = (token?: string) => {
+    // Only set the token if it's passed in. AuthScreen handles setting it to localStorage.
+    if (token) {
+      localStorage.setItem('omnicrew_token', token);
+    }
     setIsAuthenticated(true);
   };
 

@@ -41,8 +41,8 @@ const AuthScreen: React.FC = () => {
       if (!res.ok) throw new Error(data.detail || 'Authentication failed');
 
       if (isLogin) {
-        localStorage.setItem('omnicrew_token', data.token);
-        login();
+        // PASS THE REAL TOKEN TO THE LOGIN FUNCTION
+        login(data.token);
         showToast('Access granted. Welcome back.', 'success');
       } else {
         showToast('Account created successfully. Please log in.', 'success');
