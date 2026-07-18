@@ -9,7 +9,7 @@ import uuid
 import logging
 import aiomysql
 import os
-import jwt  # <--- ADDED IMPORT
+import jwt
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
@@ -18,9 +18,13 @@ logger = logging.getLogger(__name__)
 class AutonomousTaskRequest(BaseModel):
     task_description: str
 
-# --- FIX: DECODE JWT TO GET REAL USER ID ---
+# --- DECODE JWT TO GET REAL USER ID ---
 async def get_current_user_id(request: Request) -> str:
     auth_header = request.headers.get("Authorization")
+    
+    # DEBUG LOG: This will show us exactly what the frontend is sending
+    logger.info(f"Received Auth Header: {auth_header}")
+    
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
     
@@ -70,7 +74,6 @@ async def get_task_history(user_id: str = Depends(get_current_user_id)):
 @router.get("/leads", response_model=List[LeadData])
 async def get_leads(user_id: str = Depends(get_current_user_id)):
     try:
-        # Now this will fetch leads ONLY for the logged-in user
         leads = await get_leads_from_db(user_id=user_id)
         return leads
     except Exception as e:
