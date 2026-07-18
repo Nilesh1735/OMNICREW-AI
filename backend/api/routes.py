@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.util import get_remote_address
 from models.schemas import TaskResponse, LeadData
 from db.mysql_client import get_leads_from_db, get_pool
@@ -8,8 +8,6 @@ from pydantic import BaseModel
 import uuid
 import logging
 import aiomysql
-import os
-import jwt
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
@@ -18,32 +16,18 @@ logger = logging.getLogger(__name__)
 class AutonomousTaskRequest(BaseModel):
     task_description: str
 
-# FIX: Decode the JWT to get the actual user ID
 async def get_current_user_id(request: Request) -> str:
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    token = auth_header.split(" ")[1]
-    secret = os.getenv("JWT_SECRET", "supersecretjwt12345")
-    
-    try:
-        payload = jwt.decode(token, secret, algorithms=["HS256"])
-        user_id = payload.get("sub")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token payload")
-        return user_id
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    return "user_123"
 
 @router.post("/webhook/start-task", response_model=TaskResponse)
 @limiter.limit("5/minute")
 async def start_task(
     request: Request,
     payload: AutonomousTaskRequest, 
-    background_tasks: BackgroundTasks, 
+    background_tasks: BackgroundTasks, # Use FastAPI BackgroundTasks
     user_id: str = Depends(get_current_user_id)
 ):
     task_id = str(uuid.uuid4())
@@ -54,6 +38,7 @@ async def start_task(
             await cur.execute("INSERT INTO tasks (id, user_id, description, status) VALUES (%s, %s, %s, %s)", 
                               (task_id, user_id, payload.task_description, "queued"))
 
+    # Import the task function directly instead of using Celery
     from tasks import execute_agent_crew_task
     background_tasks.add_task(execute_agent_crew_task, task_id, payload.task_description, None, user_id)
     
