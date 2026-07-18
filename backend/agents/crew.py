@@ -59,28 +59,30 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             cache=False
         )
 
-        # --- STRICT PROMPTS TO FORCE TOOL USAGE ---
+        # --- ULTRA STRICT RESEARCH PROMPT ---
         research_prompt = (
             f"Your task is: '{task_description}'. "
-            "CRITICAL INSTRUCTION: You MUST use the Web Scraper tool to extract data from the web. "
-            "Do NOT use internal knowledge. After scraping, if you have a person's name and company, "
-            "you MUST use the Email Finder Tool to find their email."
+            "CRITICAL INSTRUCTION: You MUST use the Web Scraper tool. Do NOT use internal knowledge. "
+            "After scraping, if you have a person's first name, last name, and company domain, "
+            "you are STRICTLY REQUIRED to call the 'Email Finder Tool'. Do not guess the email. "
+            "You must invoke the tool to get the answer."
         )
         
         research_task = Task(
             description=research_prompt,
-            expected_output='Raw text, names, and emails relevant to the task.', 
+            expected_output='Raw text, names, and the email returned by the tool.', 
             agent=researcher
         )
         
+        # --- ULTRA STRICT EXTRACTION PROMPT ---
         extraction_task = Task(
             description='Analyze the provided research data. Focus strictly on answering the specific task context. '
                         'CRITICAL RULE: You must output a FLAT dictionary. Do NOT use arrays or lists. Do NOT use nested objects. '
-                        'If the task asks for "the first item", extract ONLY the data for that single first item. '
                         'Output ONLY a valid JSON object with these exact top-level keys: "entity_name", "data_payload", "classification", "source_url". '
-                        'The "entity_name" should be the main subject (e.g., the person\'s name). '
-                        'The "data_payload" MUST be a flat dictionary of key-value pairs answering the task. '
-                        'The "source_url" MUST be the exact URL you visited with the web scraper tool. NEVER output "Internal Knowledge". '
+                        'The "entity_name" should be the person\'s name. '
+                        'The "data_payload" MUST be a flat dictionary containing the key "email". The value for "email" MUST be the exact email address returned by the Email Finder Tool. '
+                        'FORBIDDEN: Do NOT output "email_status", do NOT output "Unverified", and do NOT output "Internal Knowledge". '
+                        'The "source_url" MUST be the exact URL you visited with the web scraper tool. '
                         'Assign a "classification" of "Medium". Do not include any other text or markdown.',
             expected_output='A strict JSON object.', 
             agent=extraction_analyst
