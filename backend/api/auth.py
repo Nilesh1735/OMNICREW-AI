@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import bcrypt
+import os
+import jwt
 from db.postgres_client import create_user, get_user_by_identifier
 import logging
 
@@ -42,4 +44,8 @@ def login(user: UserLogin):
     if not bcrypt.checkpw(user.password.encode('utf-8'), hashed_password_str.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Invalid credentials. Access denied.")
         
-    return {"token": f"mock_token_{db_user['id']}", "user_id": str(db_user['id'])}
+    # --- FIX: GENERATE REAL JWT TOKEN ---
+    secret = os.getenv("JWT_SECRET", "supersecretjwt12345")
+    token = jwt.encode({"sub": str(db_user['id'])}, secret, algorithm="HS256")
+    
+    return {"token": token, "user_id": str(db_user['id'])}
