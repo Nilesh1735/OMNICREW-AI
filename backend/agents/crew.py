@@ -8,7 +8,7 @@ import litellm
 from typing import Optional, List, Tuple
 from pydantic import ValidationError
 from crewai import Agent, Task, Crew, Process, LLM
-from agents.tools import WebScraperTool, SnovEmailFinderTool  # <-- Imported both tools
+from agents.tools import WebScraperTool, SnovEmailFinderTool
 from models.schemas import LeadData, AgentLog
 from db.mysql_client import insert_lead_sync
 from utils.s3_client import archive_to_s3
@@ -34,7 +34,7 @@ def get_fallback_llms() -> List[Tuple[object, str]]:
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
     scraper_tool = WebScraperTool()
-    email_tool = SnovEmailFinderTool()  # <-- Instantiated the new tool
+    email_tool = SnovEmailFinderTool()
     llms_to_try = get_fallback_llms()
     
     if not llms_to_try:
@@ -47,8 +47,8 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             goal='Gather the necessary information to fulfill the task. If a URL is provided, scrape it. If the task asks for an email, scrape the page to find the person\'s name and company, then use the Email Finder Tool.',
             backstory='An expert AI agent capable of navigating the web, extracting B2B leads, and using APIs to enrich data.',
             verbose=True, allow_delegation=False, 
-            tools=[scraper_tool, email_tool],  # <-- Gave both tools to researcher
-            llm=llm_obj, max_iter=10,  # Increased max_iter so it has turns to scrape THEN call Snov.io
+            tools=[scraper_tool, email_tool], 
+            llm=llm_obj, max_iter=10, 
             cache=False
         )
         extraction_analyst = Agent(
@@ -59,29 +59,28 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             cache=False
         )
 
-        if target_url:
-            research_prompt = f"Use the Web Scraper tool to visit {target_url} and extract the page content. Task context: {task_description}"
-        else:
-            research_prompt = (
-                f"No target URL was provided. Your task is: '{task_description}'. "
-                "Since you have no URL to scrape, use your internal knowledge and reasoning capabilities to "
-                "gather the information required to answer the task. If you know the answer, provide the details."
-            )
-
+        # --- STRICT PROMPTS TO FORCE TOOL USAGE ---
+        research_prompt = (
+            f"Your task is: '{task_description}'. "
+            "CRITICAL INSTRUCTION: You MUST use the Web Scraper tool to extract data from the web. "
+            "Do NOT use internal knowledge. After scraping, if you have a person's name and company, "
+            "you MUST use the Email Finder Tool to find their email."
+        )
+        
         research_task = Task(
             description=research_prompt,
-            expected_output='Raw text or information relevant to the task.', 
+            expected_output='Raw text, names, and emails relevant to the task.', 
             agent=researcher
         )
+        
         extraction_task = Task(
             description='Analyze the provided research data. Focus strictly on answering the specific task context. '
                         'CRITICAL RULE: You must output a FLAT dictionary. Do NOT use arrays or lists. Do NOT use nested objects. '
-                        'If the task asks for "the first item", extract ONLY the data for that single first item (e.g., {"title": "Book Name", "price": "$10.00"}). '
-                        'Do not include data for multiple items. '
+                        'If the task asks for "the first item", extract ONLY the data for that single first item. '
                         'Output ONLY a valid JSON object with these exact top-level keys: "entity_name", "data_payload", "classification", "source_url". '
-                        'The "entity_name" should be the main subject (e.g., the book title). '
+                        'The "entity_name" should be the main subject (e.g., the person\'s name). '
                         'The "data_payload" MUST be a flat dictionary of key-value pairs answering the task. '
-                        'The "source_url" MUST be the exact URL you visited or attempted to visit with the web scraper tool. If you did not use the scraper and relied entirely on internal knowledge, output "Internal Knowledge". '
+                        'The "source_url" MUST be the exact URL you visited with the web scraper tool. NEVER output "Internal Knowledge". '
                         'Assign a "classification" of "Medium". Do not include any other text or markdown.',
             expected_output='A strict JSON object.', 
             agent=extraction_analyst
