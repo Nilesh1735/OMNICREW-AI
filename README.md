@@ -1,36 +1,36 @@
 <div align="center">
-<a href="https://github.com/Nilesh1735/OmniCrew-AI">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:7dd3fc,100:0ea5e9&height=120&section=header" width="100%" />
+<a href="https://github.com/Nilesh1735/OMNICREW-AI">
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:EC4730,100:B33A24&height=120&section=header" width="100%" />
 </a>
 </div>
 
-# OmniCrew AI - Autonomous Web Extraction
+# OMNICREW AI - Autonomous Web Extraction & Enrichment
 
 <div align="center">
-<p>An enterprise-grade, autonomous data extraction platform that leverages a multi-agent AI crew to navigate, scrape, and structure web data without API usage caps. Built with a microservices architecture optimized for cost, scale, and real-time observability.</p>
+<p>An enterprise-grade, autonomous B2B lead generation platform that leverages a multi-agent AI crew to scrape, structure, and enrich web data without API usage caps. Built with a microservices architecture optimized for cost, scale, and real-time observability.</p>
 
 <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
 <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
 <img src="https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
 <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
 <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
-<img src="https://img.shields.io/badge/Celery-37814A?style=for-the-badge&logo=celery&logoColor=white" alt="Celery" />
+<img src="https://img.shields.io/badge/Snov.io-EC4730?style=for-the-badge&logo=mailgun&logoColor=white" alt="Snov.io" />
 
 </div>
 
 <br>
 
 <div align="center">
-<a href="https://github.com/Nilesh1735/OmniCrew-AI">
-<img src="https://github-readme-stats.vercel.app/api/pin/?username=Nilesh1735&repo=OmniCrew-AI&theme=nord&title_color=7dd3fc&icon_color=7dd3fc&border_color=7dd3fc" alt="OmniCrew-AI" />
+<a href="https://github.com/Nilesh1735/OMNICREW-AI">
+<img src="https://github-readme-stats.vercel.app/api/pin/?username=Nilesh1735&repo=OMNICREW-AI&theme=highcontrast&title_color=EC4730&icon_color=EC4730&border_color=EC4730" alt="OMNICREW-AI" />
 </a>
 </div>
 
 ## Overview
 
-OmniCrew AI is not just a scraper; it is a closed-loop multi-agent system. The Researcher agent navigates the web, the Extraction Analyst formats the data into strict JSON schemas, and the Manager validates the output. 
+OMNICREW AI is not just a scraper; it is a closed-loop multi-agent system designed for B2B lead generation. The Researcher agent navigates the web, the Extraction Analyst formats the data into strict JSON schemas, and the backend enriches the data using the Snov.io API to find verified emails. 
 
-Instead of relying on a single LLM provider, OmniCrew uses a resilient routing pipeline (Mistral AI to OpenAI to Local Ollama) to ensure high availability. To optimize for production scale and cost, the backend utilizes Celery and Redis for asynchronous task queues, Redis LLM caching to bypass duplicate API calls (saving tokens), and semantic deduplication to maintain clean database records.
+Instead of relying on a single LLM provider, OMNICREW uses a resilient routing pipeline (Mistral AI to OpenAI) to ensure high availability. To optimize for production scale and cost, the backend utilizes FastAPI BackgroundTasks for asynchronous processing, Upstash Redis for zero-token LLM caching, and strict JWT user isolation to ensure multi-tenant data security.
 
 ## Tech Stack
 
@@ -43,23 +43,23 @@ Instead of relying on a single LLM provider, OmniCrew uses a resilient routing p
 </tr>
 <tr>
 <td>AI / GenAI</td>
-<td>CrewAI, LangChain, Mistral AI, OpenAI, Ollama</td>
+<td>CrewAI, LangChain, Mistral AI, OpenAI, Snov.io API</td>
 </tr>
 <tr>
 <td>Backend</td>
-<td>FastAPI, Celery, Uvicorn, Pydantic</td>
+<td>FastAPI, Pydantic, WebSockets, BackgroundTasks</td>
 </tr>
 <tr>
 <td>Frontend</td>
-<td>React 19, Vite, TypeScript, Framer Motion, ReactFlow</td>
+<td>React 19, Vite, TypeScript, Framer Motion</td>
 </tr>
 <tr>
 <td>Data Layer</td>
-<td>PostgreSQL, MySQL, Redis</td>
+<td>MySQL (Aiven), Upstash Redis</td>
 </tr>
 <tr>
 <td>DevOps & Cloud</td>
-<td>Docker, Docker Compose, AWS S3, Render, Vercel</td>
+<td>Docker, AWS S3, Render, Vercel</td>
 </tr>
 </table>
 
@@ -73,7 +73,6 @@ Instead of relying on a single LLM provider, OmniCrew uses a resilient routing p
 <img src="https://skillicons.dev/icons?i=aws" alt="AWS" />
 <br><br>
 <img src="https://skillicons.dev/icons?i=typescript" alt="TypeScript" />
-<img src="https://skillicons.dev/icons?i=postgres" alt="PostgreSQL" />
 <img src="https://skillicons.dev/icons?i=mysql" alt="MySQL" />
 <img src="https://skillicons.dev/icons?i=git" alt="Git" />
 <img src="https://skillicons.dev/icons?i=github" alt="GitHub" />
@@ -84,12 +83,12 @@ Instead of relying on a single LLM provider, OmniCrew uses a resilient routing p
 
 This repository includes production-grade, enterprise-level architectural implementations:
 
-1. **Multi-Agent CrewAI Orchestration:** Utilizes a sequential pipeline where a Web Researcher gathers data and an Extraction Analyst strictly formats it into Pydantic schemas.
-2. **Intelligent LLM Routing & Fallbacks:** Dynamically routes requests through Mistral AI, OpenAI, and Local Ollama. If a provider fails or rate-limits, the pipeline automatically reroutes without dropping the task.
-3. **Zero-Token Redis Caching:** Implements an MD5-hashed Redis cache for LLM responses. If a user submits a duplicate query, the system returns the cached result in under 1 second, costing 0 API tokens.
-4. **Asynchronous Task Queues (Celery):** Decouples heavy AI processing from the FastAPI web server using Celery workers and Redis, preventing UI timeouts when multiple users initiate scraping tasks.
-5. **Semantic Deduplication:** Computes an MD5 hash of the extracted entity name and data payload. Uses INSERT IGNORE in MySQL to prevent duplicate records from polluting the database.
-6. **Real-Time Telemetry (Redis Pub/Sub):** Streams live agent reasoning logs and pipeline status updates directly to the React frontend via WebSockets.
+1. **B2B Email Enrichment (Snov.io API):** Features a custom CrewAI `BaseTool` that authenticates with Snov.io via OAuth 2.0 to autonomously find and verify B2B emails based on scraped names and company domains.
+2. **JWT User Data Isolation:** Implements strict multi-tenant security. The backend decodes the JWT on every request to extract the `user_id`, ensuring Account A can never query or view Account B's leads and task history.
+3. **Zero-Token Redis Caching:** Implements an MD5-hashed Upstash Redis cache for LLM responses. If a user submits a duplicate query, the system returns the cached result instantly, costing 0 API tokens.
+4. **Asynchronous BackgroundTasks:** Decouples heavy AI processing from the FastAPI web server using native `BackgroundTasks`, preventing UI timeouts when multiple users initiate scraping tasks.
+5. **Real-Time WebSocket Telemetry:** Streams live agent reasoning logs and pipeline status updates directly to the React frontend via WebSockets, giving stakeholders full observability into the AI's thought process.
+6. **Resilient LLM Routing:** Dynamically routes requests through Mistral AI and OpenAI. If a provider fails or rate-limits, the pipeline catches the exception and reroutes.
 7. **AWS S3 Archival:** Automatically archives the raw JSON output of every successful task to an S3 bucket for audit and compliance purposes.
 
 ## System Architecture
@@ -98,55 +97,52 @@ This repository includes production-grade, enterprise-level architectural implem
 ┌─────────────────────────────────────────────────────────────────┐
 │                         User Interface                           │
 │ ┌─────────────────────────────────────────────────────────────┐ │
-│               React 19 + Vite + Framer Motion (Port 3001)      │ │
+│               React 19 + Vite + Framer Motion (Vercel)         │ │
 │  • Real-time LogViewer • Pipeline Graph • Expandable Data Grid │ │
 └───────────────────────────────────┬─────────────────────────────┘
                                     ↓ (REST / WebSocket)
 ┌─────────────────────────────────────────────────────────────────┐
 │                    FastAPI Backend (Async)                       │
 │ ┌────────────────────┐ ┌────────────────────┐ ┌──────────────┐ │
-│ │ Security (SSRF)    │ │ Rate Limiter       │ │ Pydantic     │ │
+│ │ Security (SSRF)    │ │ JWT Auth & Isolate │ │ Rate Limiter │ │
 │ └────────────────────┘ └────────────────────┘ └──────────────┘ │
 │ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ Pushes Task to Celery Queue & Streams Logs via Redis Pub/Sub│ │
+│ │ Spawns BackgroundTask & Streams Logs via WebSockets         │ │
 └───────────────────────────────────┬─────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Celery Worker (Background)                    │
+│                    FastAPI Background Task                       │
 │ ┌─────────┐    ┌──────────┐    ┌─────────┐    ┌──────────┐     │
-│ │ Research│ -> │ Analyze  │ -> │ Validate│ -> │ Save/Achv│     │
+│ │ Research│ -> │ Analyze  │ -> │ Enrich  │ -> │ Save/Achv│     │
 │ └─────────┘    └──────────┘    └─────────┘    └──────────┘     │
 └───────────────────────────────────┬─────────────────────────────┘
           ↓                 ↓                 ↓                 ↓
 ┌─────────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│  LLM Fallback   │ │ Redis Cache  │ │ MySQL/Postgres│ │  AWS S3      │
-│  1. Mistral     │ │ (Zero Token) │ │ (Dual DBs)   │ │  (Archival)  │
+│  LLM Fallback   │ │ Snov.io API  │ │ MySQL (Aiven)│ │  AWS S3      │
+│  1. Mistral     │ │ (Email Finder│ │ (Leads/Tasks)│ │  (Archival)  │
 │  2. OpenAI      │ └──────────────┘ └──────────────┘ └──────────────┘
-│  3. Ollama      │
 └─────────────────┘
 ```
 
 ## Project Structure
 
 ```text
-autobrowse-ai/ (OmniCrew AI)
-├── backend/                     # Python FastAPI & Celery Backend
+OMNICREW-AI/
+├── backend/                     # Python FastAPI Backend
 │   ├── agents/                  # Autonomous AI agent logic
-│   │   ├── crew.py              # CrewAI state machine, LLM routing & Caching
-│   │   └── tools.py             # Playwright/Requests web scraper tool
+│   │   ├── crew.py              # CrewAI state machine & LLM routing
+│   │   └── tools.py             # Web Scraper & Snov.io Email Finder Tool
 │   ├── api/                     # REST API & WebSocket endpoints
 │   │   ├── main.py              # FastAPI app initialization & CORS
-│   │   ├── routes.py            # Task queueing & History endpoints
-│   │   ├── auth.py              # PostgreSQL JWT Authentication
+│   │   ├── routes.py            # Task queueing, JWT Isolation & History
+│   │   ├── auth.py              # Bcrypt Signup & JWT Login
 │   │   └── websockets.py        # Redis Pub/Sub WebSocket streaming
 │   ├── db/                      # Database connectors
-│   │   ├── mysql_client.py      # MySQL (Leads/Tasks) & Deduplication
-│   │   └── postgres_client.py   # PostgreSQL (Users/Auth)
+│   │   └── mysql_client.py      # MySQL (Leads/Tasks) & Deduplication
 │   ├── security/                # AppSec layers
 │   │   ├── ssrf_blocker.py      # Server-Side Request Forgery protection
 │   │   └── validators.py        # URL input validation
-│   ├── tasks.py                 # Celery background task definition
-│   ├── celery_worker.py         # Celery app initialization
+│   ├── tasks.py                 # BackgroundTask definition
 │   ├── requirements.txt         # Python dependencies
 │   └── Dockerfile               # Backend container build
 ├── frontend/                    # React 19 + Vite + TypeScript Frontend
@@ -157,10 +153,9 @@ autobrowse-ai/ (OmniCrew AI)
 │   ├── Dockerfile               # Frontend Nginx container build
 │   └── package.json             # Node dependencies
 ├── init/                        # Database initialization scripts
-│   ├── mysql/init.sql           # MySQL schema (Leads, Tasks, Data Hash)
-│   └── postgres/init.sql        # PostgreSQL schema (Users, Sessions)
+│   └── mysql/init.sql           # MySQL schema (Leads, Tasks, Data Hash)
 ├── .env.example                 # Environment variable template
-├── docker-compose.yml           # Docker orchestration (MySQL, Postgres, Redis, API, Worker)
+├── docker-compose.yml           # Docker orchestration (MySQL, Redis, API, Worker)
 └── README.md                    # This file
 ```
 
@@ -168,14 +163,14 @@ autobrowse-ai/ (OmniCrew AI)
 
 ### Prerequisites
 - **Docker & Docker Compose** (Recommended for local development)
-- **API Keys:** Mistral AI (Primary), OpenAI (Secondary)
+- **API Keys:** Mistral AI (Primary), OpenAI (Secondary), Snov.io (for Email Enrichment)
 
 ### Installation & Local Deployment
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Nilesh1735/OmniCrew-AI.git
-   cd OmniCrew-AI
+   git clone https://github.com/Nilesh1735/OMNICREW-AI.git
+   cd OMNICREW-AI
    ```
 
 2. **Configure Environment Variables:**
@@ -185,22 +180,25 @@ autobrowse-ai/ (OmniCrew AI)
    MISTRAL_API_KEY=your_mistral_key_here
    OPENAI_API_KEY=your_openai_key_here
 
-   # LLMOps (Optional)
-   LANGCHAIN_TRACING_V2=true
-   LANGCHAIN_API_KEY=your_langsmith_key
-   LANGCHAIN_PROJECT=omnicrew-ai-prod
+   # B2B Enrichment
+   SNOV_CLIENT_ID=your_snov_client_id
+   SNOV_CLIENT_SECRET=your_snov_client_secret
 
-   # AWS S3 (Optional)
-   AWS_ACCESS_KEY_ID=your_key
-   AWS_SECRET_ACCESS_KEY=your_secret
-   AWS_STORAGE_BUCKET_NAME=your_bucket
+   # Databases
+   MYSQL_HOST=...
+   MYSQL_USER=...
+   MYSQL_PASSWORD=...
+   MYSQL_DB=...
+   REDIS_URL=redis://localhost:6379/0
+
+   # Security
+   JWT_SECRET=your_super_secret_jwt_key
    ```
 
 3. **Start the Microservices Stack:**
    ```bash
    docker-compose up --build
    ```
-   *(This spins up MySQL, PostgreSQL, Redis, the FastAPI Backend, the Celery Worker, and the React Frontend).*
 
 4. **Access the Application:**
    Open your browser and navigate to `http://localhost:3001`. Create an account, log in, and initiate an autonomous task!
@@ -211,9 +209,7 @@ To deploy this application for $0.00, the architecture is split across free clou
 
 1. **Frontend (Vercel):** Deploy the `frontend/` directory. Set `VITE_API_URL` to your Render backend URL.
 2. **Backend (Render):** Deploy the `backend/` directory as a Web Service. Use `uvicorn api.main:app --host 0.0.0.0 --port $PORT` as the start command.
-3. **Databases:** Use free tiers from Supabase (PostgreSQL), Aiven (MySQL), and Upstash (Redis).
-
-*(Note: For the free Render tier, Celery is disabled. The backend uses FastAPI's native BackgroundTasks to process the crew asynchronously).*
+3. **Databases:** Use free tiers from Aiven (MySQL) and Upstash (Redis).
 
 ## Connect With Me
 
@@ -230,6 +226,6 @@ To deploy this application for $0.00, the architecture is split across free clou
 
 <div align="center">
 <a href="https://github.com/Nilesh1735">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:7dd3fc,100:0ea5e9&height=120&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:EC4730,100:B33A24&height=120&section=footer" width="100%" />
 </a>
 </div>
