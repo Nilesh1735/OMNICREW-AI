@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import LogViewer from './components/LogViewer';
 import LeadTable from './components/LeadTable';
 import AuthScreen from './components/AuthScreen';
@@ -313,6 +314,7 @@ const App: React.FC = () => (
   <ToastProvider>
     <AuthProvider>
       <RootApp />
+      <Analytics />
     </AuthProvider>
   </ToastProvider>
 );
