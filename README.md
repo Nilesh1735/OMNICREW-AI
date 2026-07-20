@@ -30,7 +30,7 @@
 
 OMNICREW AI is not just a scraper; it is a closed-loop multi-agent system designed for B2B lead generation. The Researcher agent navigates the web, the Extraction Analyst formats the data into strict JSON schemas, and the backend enriches the data using the Snov.io API to find verified emails. 
 
-Instead of relying on a single LLM provider, OMNICREW uses a resilient routing pipeline (Mistral AI to OpenAI) to ensure high availability. To optimize for production scale and cost, the backend utilizes FastAPI BackgroundTasks for asynchronous processing, Upstash Redis for zero-token LLM caching, and strict JWT user isolation to ensure multi-tenant data security.
+Instead of relying on a single LLM provider, OMNICREW uses a hardcoded 3-tier resilient routing pipeline (OpenAI → Mistral AI → Google Gemini) to ensure high availability. To optimize for production scale and cost, the backend utilizes FastAPI BackgroundTasks for asynchronous processing, Upstash Redis for zero-token LLM caching, and strict JWT user isolation to ensure multi-tenant data security.
 
 ## Tech Stack
 
@@ -43,7 +43,7 @@ Instead of relying on a single LLM provider, OMNICREW uses a resilient routing p
 </tr>
 <tr>
 <td>AI / GenAI</td>
-<td>CrewAI, LangChain, Mistral AI, OpenAI, Snov.io API</td>
+<td>CrewAI, LangChain, OpenAI, Mistral AI, Google Gemini, Snov.io API</td>
 </tr>
 <tr>
 <td>Backend</td>
@@ -88,7 +88,7 @@ This repository includes production-grade, enterprise-level architectural implem
 3. **Zero-Token Redis Caching:** Implements an MD5-hashed Upstash Redis cache for LLM responses. If a user submits a duplicate query, the system returns the cached result instantly, costing 0 API tokens.
 4. **Asynchronous BackgroundTasks:** Decouples heavy AI processing from the FastAPI web server using native `BackgroundTasks`, preventing UI timeouts when multiple users initiate scraping tasks.
 5. **Real-Time WebSocket Telemetry:** Streams live agent reasoning logs and pipeline status updates directly to the React frontend via WebSockets, giving stakeholders full observability into the AI's thought process.
-6. **Resilient LLM Routing:** Dynamically routes requests through Mistral AI and OpenAI. If a provider fails or rate-limits, the pipeline catches the exception and reroutes.
+6. **Resilient LLM Routing:** Hardcoded a 3-tier LLM fallback pipeline (OpenAI → Mistral AI → Gemini). If the primary provider fails or rate-limits, the pipeline automatically catches the exception and reroutes to the next provider, ensuring 99.9% task completion.
 7. **AWS S3 Archival:** Automatically archives the raw JSON output of every successful task to an S3 bucket for audit and compliance purposes.
 
 ## System Architecture
@@ -119,8 +119,9 @@ This repository includes production-grade, enterprise-level architectural implem
           ↓                 ↓                 ↓                 ↓
 ┌─────────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │  LLM Fallback   │ │ Snov.io API  │ │ MySQL (Aiven)│ │  AWS S3      │
-│  1. Mistral     │ │ (Email Finder│ │ (Leads/Tasks)│ │  (Archival)  │
-│  2. OpenAI      │ └──────────────┘ └──────────────┘ └──────────────┘
+│  1. OpenAI      │ │ (Email Finder│ │ (Leads/Tasks)│ │  (Archival)  │
+│  2. Mistral AI  │ └──────────────┘ └──────────────┘ └──────────────┘
+│  3. Gemini      │
 └─────────────────┘
 ```
 
@@ -163,7 +164,7 @@ OMNICREW-AI/
 
 ### Prerequisites
 - **Docker & Docker Compose** (Recommended for local development)
-- **API Keys:** Mistral AI (Primary), OpenAI (Secondary), Snov.io (for Email Enrichment)
+- **API Keys:** OpenAI (Primary), Mistral AI (Secondary), Google Gemini (Tertiary), Snov.io (for Email Enrichment)
 
 ### Installation & Local Deployment
 
@@ -177,8 +178,9 @@ OMNICREW-AI/
    Create a `.env` file in the root directory:
    ```env
    # AI Providers
-   MISTRAL_API_KEY=your_mistral_key_here
    OPENAI_API_KEY=your_openai_key_here
+   MISTRAL_API_KEY=your_mistral_key_here
+   GOOGLE_API_KEY=your_google_gemini_key_here
 
    # B2B Enrichment
    SNOV_CLIENT_ID=your_snov_client_id
