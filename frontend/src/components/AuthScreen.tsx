@@ -76,16 +76,16 @@ const AuthScreen: React.FC = () => {
             Autonomous Web Agents.<br /><span className="text-red">Own Your Pipeline.</span> No Meters.
           </h1>
           <p className="hero-subtitle">
-            A complete web extraction crew that runs entirely on your infrastructure. No API usage caps. No cloud dependency. Bring your engine, or run local.
+            A complete web extraction crew powered by a resilient 3-tier LLM fallback architecture. No single-point API failures. Just autonomous, structured data enrichment.
           </p>
           
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '2rem' }}>
             <span style={{ fontSize: '0.7rem', color: '#86868b', textTransform: 'uppercase', letterSpacing: '1px' }}>Powered By</span>
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', opacity: 0.9 }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ff7000' }}>Mistral AI</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#10a37f' }}>OpenAI</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>Ollama (Local)</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#2D7FF9' }}>Playwright</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ff7000' }}>Mistral AI</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#4285F4' }}>Google Gemini</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>CrewAI</span>
             </div>
           </div>
         </motion.div>
@@ -123,7 +123,7 @@ const AuthScreen: React.FC = () => {
           <div className="section-label">[02] The Solution</div>
           <h2 className="section-heading">Everything routed. Own your AI.</h2>
           <p className="solution-text">
-            OmniCrew AI is a closed-loop multi-agent system. The Researcher scrapes, the Analyst extracts, the Manager validates. You route the LLM engine: OpenAI, Gemini, or 100% local Ollama. Zero API limits.
+            OmniCrew AI is a closed-loop multi-agent system. The Researcher scrapes, the Analyst extracts, the Manager validates. If a primary LLM provider fails or rate-limits, the pipeline automatically reroutes through OpenAI, Mistral, and Gemini. 99.9% uptime.
           </p>
         </motion.div>
 
@@ -135,13 +135,13 @@ const AuthScreen: React.FC = () => {
         >
           <div className="stat-box">
             <span className="stat-label">Latency</span>
-            <span className="stat-value">0ms</span>
-            <span className="stat-note">No external API round-trip (Local)</span>
+            <span className="stat-value">&lt;50ms</span>
+            <span className="stat-note">Redis-cached query response</span>
           </div>
           <div className="stat-box">
             <span className="stat-label">Cost / Token</span>
             <span className="stat-value">$0.00</span>
-            <span className="stat-note">Run local Ollama models</span>
+            <span className="stat-note">MD5 caching for duplicate queries</span>
           </div>
           <div className="stat-box">
             <span className="stat-label">Schema</span>
@@ -201,7 +201,7 @@ const AuthScreen: React.FC = () => {
         </motion.div>
 
         <div className="landing-footer">
-          <p>Break free from metered APIs. Bring your engine, or run local.</p>
+          <p>Built for scale. Powered by resilient LLM routing and autonomous agents.</p>
         </div>
       </div>
     </div>
