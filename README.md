@@ -30,7 +30,7 @@
 
 OMNICREW AI is not just a scraper; it is a closed-loop multi-agent system designed for B2B lead generation. The Researcher agent navigates the web, the Extraction Analyst formats the data into strict JSON schemas, and the backend enriches the data using the Snov.io API to find verified emails. 
 
-Instead of relying on a single LLM provider, OMNICREW uses a hardcoded 3-tier resilient routing pipeline (OpenAI → Mistral AI → Google Gemini) to ensure high availability. To optimize for production scale and cost, the backend utilizes FastAPI BackgroundTasks for asynchronous processing, Upstash Redis for zero-token LLM caching, and strict JWT user isolation to ensure multi-tenant data security.
+Instead of relying on a single LLM provider, OMNICREW uses a 3-tier resilient routing pipeline (OpenAI → Mistral AI → Google Gemini) to ensure high availability. To optimize for production scale and cost, the backend utilizes FastAPI BackgroundTasks for asynchronous processing, Upstash Redis for zero-token LLM caching, and strict JWT user isolation to ensure multi-tenant data security.
 
 ## Tech Stack
 
