@@ -19,17 +19,57 @@ litellm.drop_params = True
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
 
 def get_fallback_llms() -> List[Tuple[object, str]]:
+    """
+    Hardcoded 3-Tier LLM Fallback Router.
+    1. OpenAI (Fastest, most reliable for production)
+    2. Mistral AI
+    3. Google Gemini
+    """
     llms = []
+    
+    # 1. OpenAI (Primary)
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if openai_key and openai_key != "sk-your_openai_key_here":
+        try:
+            logger.info("Initializing OpenAI (Tier 1).")
+            llms.append((
+                LLM(model="gpt-4o-mini", api_key=openai_key),
+                "OpenAI"
+            ))
+        except Exception as e:
+            logger.error(f"OpenAI init failed: {e}")
+
+    # 2. Mistral AI (Secondary)
     mistral_key = os.getenv("MISTRAL_API_KEY")
     if mistral_key:
-        llms.append((
-            LLM(
-                model="openai/mistral-large-latest",
-                api_key=mistral_key,
-                base_url="https://api.mistral.ai/v1/"
-            ),
-            "mistral-large-latest"
-        ))
+        try:
+            logger.info("Initializing Mistral AI (Tier 2).")
+            llms.append((
+                LLM(
+                    model="openai/mistral-large-latest", 
+                    api_key=mistral_key, 
+                    base_url="https://api.mistral.ai/v1/"
+                ),
+                "Mistral AI"
+            ))
+        except Exception as e:
+            logger.error(f"Mistral init failed: {e}")
+
+    # 3. Google Gemini (Tertiary)
+    gemini_key = os.getenv("GOOGLE_API_KEY")
+    if gemini_key and gemini_key != "AIzaSy_your_gemini_key_here":
+        try:
+            logger.info("Initializing Google Gemini (Tier 3).")
+            llms.append((
+                LLM(model="gemini/gemini-1.5-flash", api_key=gemini_key),
+                "Gemini"
+            ))
+        except Exception as e:
+            logger.error(f"Gemini init failed: {e}")
+
+    if not llms:
+        raise ValueError("No LLMs configured. Please set API keys in environment variables.")
+        
     return llms
 
 async def run_crew(task_id: str, task_description: str, target_url: Optional[str], manager, user_id: str):
@@ -191,6 +231,10 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
         
         if not lead_dict.get('source_url'):
             lead_dict['source_url'] = target_url if target_url else "Internal Knowledge"
+        
+        # FIX: Fallback for LLM dropping the classification field
+        if lead_dict.get('classification') not in ['High', 'Medium', 'Low']:
+            lead_dict['classification'] = 'Medium'
             
         lead_data = LeadData(**lead_dict)
         insert_lead_sync(lead_data)

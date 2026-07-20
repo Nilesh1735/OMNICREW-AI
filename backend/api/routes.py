@@ -18,6 +18,18 @@ logger = logging.getLogger(__name__)
 class AutonomousTaskRequest(BaseModel):
     task_description: str
 
+# --- HARDCODED LLM STATUS ENDPOINT ---
+@router.get("/api/config/llm-status")
+async def get_llm_status():
+    """
+    Single source of truth for the frontend UI.
+    Returns the hardcoded active LLM routing chain.
+    """
+    return {
+        "mode": "Cloud (Resilient)",
+        "llms": ["OpenAI", "Mistral AI", "Gemini"]
+    }
+
 # --- DECODE JWT TO GET REAL USER ID ---
 async def get_current_user_id(request: Request) -> str:
     auth_header = request.headers.get("Authorization")
