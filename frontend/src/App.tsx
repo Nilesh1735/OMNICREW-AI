@@ -5,6 +5,7 @@ import AuthScreen from './components/AuthScreen';
 import PipelineGraph from './components/PipelineGraph';
 import ErrorBoundary from './components/ErrorBoundary';
 import CanvasBackground from './components/CanvasBackground';
+import SmoothScroll from './components/SmoothScroll'; // <-- ADDED IMPORT
 import Admin from './pages/Admin';
 import { useLeads } from './hooks/useLeads';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -312,7 +313,9 @@ const RootApp: React.FC = () => {
 const App: React.FC = () => (
   <ToastProvider>
     <AuthProvider>
-      <RootApp />
+      <SmoothScroll> {/* <-- WRAPPED HERE */}
+        <RootApp />
+      </SmoothScroll> {/* <-- CLOSED HERE */}
     </AuthProvider>
   </ToastProvider>
 );
