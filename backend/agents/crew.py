@@ -99,29 +99,32 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
             cache=False
         )
 
-        # --- ULTRA STRICT RESEARCH PROMPT ---
+        # --- DYNAMIC RESEARCH PROMPT ---
         research_prompt = (
             f"Your task is: '{task_description}'. "
-            "CRITICAL INSTRUCTION: You MUST use the Web Scraper tool. Do NOT use internal knowledge. "
-            "After scraping, if you have a person's first name, last name, and company domain, "
+            "CRITICAL INSTRUCTION: You MUST use the Web Scraper tool to extract the required information. Do NOT use internal knowledge. "
+            "CONDITIONAL LOGIC: If the task specifically asks you to find an email address, and you have scraped a person's name and company domain, "
             "you are STRICTLY REQUIRED to call the 'Email Finder Tool'. Do not guess the email. "
-            "You must invoke the tool to get the answer."
+            "If the task does NOT ask for an email, do not use the Email Finder Tool."
         )
         
         research_task = Task(
             description=research_prompt,
-            expected_output='Raw text, names, and the email returned by the tool.', 
+            expected_output='Raw text, names, and the email (if requested) returned by the tool.', 
             agent=researcher
         )
         
-        # --- ULTRA STRICT EXTRACTION PROMPT ---
+        # --- DYNAMIC EXTRACTION PROMPT ---
         extraction_task = Task(
             description='Analyze the provided research data. Focus strictly on answering the specific task context. '
                         'CRITICAL RULE: You must output a FLAT dictionary. Do NOT use arrays or lists. Do NOT use nested objects. '
                         'Output ONLY a valid JSON object with these exact top-level keys: "entity_name", "data_payload", "classification", "source_url". '
-                        'The "entity_name" should be the person\'s name. '
-                        'The "data_payload" MUST be a flat dictionary containing the key "email". The value for "email" MUST be the exact email address returned by the Email Finder Tool. '
-                        'FORBIDDEN: Do NOT output "email_status", do NOT output "Unverified", and do NOT output "Internal Knowledge". '
+                        'The "entity_name" should be the main subject of the task. '
+                        'The "data_payload" MUST be a flat dictionary of key-value pairs answering the task. '
+                        'CONDITIONAL LOGIC: '
+                        '1. If the task specifically asks to find an email, the "data_payload" MUST contain the key "email" with the email address returned by the tool. '
+                        '2. If the task asks for a list (e.g., "top 5 items"), DO NOT use arrays. Instead, output them as distinct keys in the dictionary (e.g., "item_1": "Repo A", "item_2": "Repo B"). '
+                        '3. If the task asks for general information, just include the relevant facts as key-value pairs. '
                         'The "source_url" MUST be the exact URL you visited with the web scraper tool. '
                         'Assign a "classification" of "Medium". Do not include any other text or markdown.',
             expected_output='A strict JSON object.', 
