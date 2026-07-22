@@ -126,9 +126,10 @@ async def run_crew(task_id: str, task_description: str, target_url: Optional[str
                         'The "entity_name" should be the main subject of the task. '
                         'The "data_payload" MUST be a flat dictionary of key-value pairs answering the task. '
                         'CONDITIONAL LOGIC: '
-                        '1. If the task specifically asks to find an email, the "data_payload" MUST contain the key "email" with the email address returned by the tool. '
-                        '2. If the task asks for a list (e.g., "top 5 items"), DO NOT use arrays. Instead, output them as distinct keys in the dictionary (e.g., "item_1": "Repo A", "item_2": "Repo B"). '
-                        '3. If the task asks for general information, just include the relevant facts as key-value pairs. '
+                        '1. If the task specifically asks to find an email, the "data_payload" MUST contain the key "email". '
+                        '2. If the Email Finder Tool returns an error, 404, or fails to find the email, you MUST set the "email" value to "Email Not Found". DO NOT GUESS OR HALLUCINATE THE EMAIL. '
+                        '3. If the task asks for a list (e.g., "top 5 items"), DO NOT use arrays. Instead, output them as distinct keys in the dictionary (e.g., "item_1": "Repo A", "item_2": "Repo B"). '
+                        '4. If the task asks for general information, just include the relevant facts as key-value pairs. '
                         'The "source_url" MUST be the exact URL you visited with the web scraper tool. '
                         'Assign a "classification" of "Medium". Do not include any other text or markdown.',
             expected_output='A strict JSON object.', 
