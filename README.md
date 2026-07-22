@@ -1,8 +1,4 @@
-Here is the fully updated **OMNICREW AI `README.md`**. I have replaced OpenAI with DeepSeek, changed "Hardcoded" to "Architected", and updated the `.env` template.
 
-Copy and paste this entire block over your current OMNICREW AI `README.md`:
-
-```markdown
 <div align="center">
 <a href="https://github.com/Nilesh1735/OMNICREW-AI">
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:EC4730,100:B33A24&height=120&section=header" width="100%" />
