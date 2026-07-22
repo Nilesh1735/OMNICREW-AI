@@ -1,3 +1,8 @@
+Here is the fully updated **OMNICREW AI `README.md`**. I have replaced OpenAI with DeepSeek, changed "Hardcoded" to "Architected", and updated the `.env` template.
+
+Copy and paste this entire block over your current OMNICREW AI `README.md`:
+
+```markdown
 <div align="center">
 <a href="https://github.com/Nilesh1735/OMNICREW-AI">
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:EC4730,100:B33A24&height=120&section=header" width="100%" />
@@ -30,7 +35,7 @@
 
 OMNICREW AI is not just a scraper; it is a closed-loop multi-agent system designed for B2B lead generation. The Researcher agent navigates the web, the Extraction Analyst formats the data into strict JSON schemas, and the backend enriches the data using the Snov.io API to find verified emails. 
 
-Instead of relying on a single LLM provider, OMNICREW uses a 3-tier resilient routing pipeline (OpenAI → Mistral AI → Google Gemini) to ensure high availability. To optimize for production scale and cost, the backend utilizes FastAPI BackgroundTasks for asynchronous processing, Upstash Redis for zero-token LLM caching, and strict JWT user isolation to ensure multi-tenant data security.
+Instead of relying on a single LLM provider, OMNICREW uses a 3-tier resilient routing pipeline (DeepSeek → Mistral AI → Google Gemini) to ensure high availability. To optimize for production scale and cost, the backend utilizes FastAPI BackgroundTasks for asynchronous processing, Upstash Redis for zero-token LLM caching, and strict JWT user isolation to ensure multi-tenant data security.
 
 ## Tech Stack
 
@@ -43,7 +48,7 @@ Instead of relying on a single LLM provider, OMNICREW uses a 3-tier resilient ro
 </tr>
 <tr>
 <td>AI / GenAI</td>
-<td>CrewAI, LangChain, OpenAI, Mistral AI, Google Gemini, Snov.io API</td>
+<td>CrewAI, LangChain, DeepSeek (V3), Mistral AI, Google Gemini, Snov.io API</td>
 </tr>
 <tr>
 <td>Backend</td>
@@ -88,7 +93,7 @@ This repository includes production-grade, enterprise-level architectural implem
 3. **Zero-Token Redis Caching:** Implements an MD5-hashed Upstash Redis cache for LLM responses. If a user submits a duplicate query, the system returns the cached result instantly, costing 0 API tokens.
 4. **Asynchronous BackgroundTasks:** Decouples heavy AI processing from the FastAPI web server using native `BackgroundTasks`, preventing UI timeouts when multiple users initiate scraping tasks.
 5. **Real-Time WebSocket Telemetry:** Streams live agent reasoning logs and pipeline status updates directly to the React frontend via WebSockets, giving stakeholders full observability into the AI's thought process.
-6. **Resilient LLM Routing:** Hardcoded a 3-tier LLM fallback pipeline (OpenAI → Mistral AI → Gemini). If the primary provider fails or rate-limits, the pipeline automatically catches the exception and reroutes to the next provider, ensuring 99.9% task completion.
+6. **Resilient LLM Routing:** Architected a 3-tier LLM fallback pipeline (DeepSeek → Mistral AI → Gemini). If the primary provider fails or rate-limits, the pipeline automatically catches the exception and reroutes to the next provider, ensuring 99.9% task completion.
 7. **AWS S3 Archival:** Automatically archives the raw JSON output of every successful task to an S3 bucket for audit and compliance purposes.
 
 ## System Architecture
@@ -119,7 +124,7 @@ This repository includes production-grade, enterprise-level architectural implem
           ↓                 ↓                 ↓                 ↓
 ┌─────────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │  LLM Fallback   │ │ Snov.io API  │ │ MySQL (Aiven)│ │  AWS S3      │
-│  1. OpenAI      │ │ (Email Finder│ │ (Leads/Tasks)│ │  (Archival)  │
+│  1. DeepSeek    │ │ (Email Finder│ │ (Leads/Tasks)│ │  (Archival)  │
 │  2. Mistral AI  │ └──────────────┘ └──────────────┘ └──────────────┘
 │  3. Gemini      │
 └─────────────────┘
@@ -164,7 +169,7 @@ OMNICREW-AI/
 
 ### Prerequisites
 - **Docker & Docker Compose** (Recommended for local development)
-- **API Keys:** OpenAI (Primary), Mistral AI (Secondary), Google Gemini (Tertiary), Snov.io (for Email Enrichment)
+- **API Keys:** DeepSeek (Primary), Mistral AI (Secondary), Google Gemini (Tertiary), Snov.io (for Email Enrichment)
 
 ### Installation & Local Deployment
 
@@ -178,7 +183,7 @@ OMNICREW-AI/
    Create a `.env` file in the root directory:
    ```env
    # AI Providers
-   OPENAI_API_KEY=your_openai_key_here
+   DEEPSEEK_API_KEY=your_deepseek_key_here
    MISTRAL_API_KEY=your_mistral_key_here
    GOOGLE_API_KEY=your_google_gemini_key_here
 
@@ -231,3 +236,4 @@ To deploy this application for $0.00, the architecture is split across free clou
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:EC4730,100:B33A24&height=120&section=footer" width="100%" />
 </a>
 </div>
+```
