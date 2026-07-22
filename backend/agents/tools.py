@@ -48,6 +48,15 @@ class WebScraperTool(BaseTool):
             response = requests.get(url, timeout=15, headers=headers)
             soup = BeautifulSoup(response.text, 'html.parser')
             text_content = soup.get_text(separator='\n', strip=True)
+            
+            # Fallback to Jina AI Reader if the page is JS-heavy and returned little/no text
+            if len(text_content) < 200 or "Page not found" in text_content:
+                logger.info(f"Standard scrape failed or returned empty. Falling back to Jina AI Reader for {url}")
+                jina_url = f"https://r.jina.ai/{url}"
+                jina_response = requests.get(jina_url, timeout=20, headers={"Accept": "text/plain"})
+                if jina_response.status_code == 200 and len(jina_response.text) > 200:
+                    text_content = jina_response.text
+            
             if text_content:
                 return text_content[:5000]
             return "No text content found on the page."
