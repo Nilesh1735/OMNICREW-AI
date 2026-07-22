@@ -21,23 +21,27 @@ redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0")
 def get_fallback_llms() -> List[Tuple[object, str]]:
     """
     Hardcoded 3-Tier LLM Fallback Router.
-    1. OpenAI (Fastest, most reliable for production)
+    1. DeepSeek (Primary - GPT-4 level quality, ultra-cheap)
     2. Mistral AI
     3. Google Gemini
     """
     llms = []
     
-    # 1. OpenAI (Primary)
-    openai_key = os.getenv("OPENAI_API_KEY")
-    if openai_key and openai_key != "sk-your_openai_key_here":
+    # 1. DeepSeek (Primary)
+    deepseek_key = os.getenv("DEEPSEEK_API_KEY")
+    if deepseek_key:
         try:
-            logger.info("Initializing OpenAI (Tier 1).")
+            logger.info("Initializing DeepSeek (Tier 1).")
             llms.append((
-                LLM(model="gpt-4o-mini", api_key=openai_key),
-                "OpenAI"
+                LLM(
+                    model="deepseek-chat", 
+                    api_key=deepseek_key,
+                    base_url="https://api.deepseek.com/v1"
+                ),
+                "DeepSeek"
             ))
         except Exception as e:
-            logger.error(f"OpenAI init failed: {e}")
+            logger.error(f"DeepSeek init failed: {e}")
 
     # 2. Mistral AI (Secondary)
     mistral_key = os.getenv("MISTRAL_API_KEY")

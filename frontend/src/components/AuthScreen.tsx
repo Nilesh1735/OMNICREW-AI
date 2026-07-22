@@ -82,7 +82,7 @@ const AuthScreen: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '2rem' }}>
             <span style={{ fontSize: '0.7rem', color: '#86868b', textTransform: 'uppercase', letterSpacing: '1px' }}>Powered By</span>
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', opacity: 0.9 }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#10a37f' }}>OpenAI</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#4D6BFE' }}>DeepSeek</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ff7000' }}>Mistral AI</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#4285F4' }}>Google Gemini</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>CrewAI</span>
@@ -123,7 +123,7 @@ const AuthScreen: React.FC = () => {
           <div className="section-label">[02] The Solution</div>
           <h2 className="section-heading">Everything routed. Own your AI.</h2>
           <p className="solution-text">
-            OmniCrew AI is a closed-loop multi-agent system. The Researcher scrapes, the Analyst extracts, the Manager validates. If a primary LLM provider fails or rate-limits, the pipeline automatically reroutes through OpenAI, Mistral, and Gemini. 99.9% uptime.
+            OmniCrew AI is a closed-loop multi-agent system. The Researcher scrapes, the Analyst extracts, the Manager validates. If a primary LLM provider fails or rate-limits, the pipeline automatically reroutes through DeepSeek, Mistral, and Gemini. 99.9% uptime.
           </p>
         </motion.div>
 
