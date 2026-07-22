@@ -231,4 +231,3 @@ To deploy this application for $0.00, the architecture is split across free clou
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:EC4730,100:B33A24&height=120&section=footer" width="100%" />
 </a>
 </div>
-```
