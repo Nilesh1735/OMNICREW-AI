@@ -95,26 +95,28 @@ class SnovEmailFinderTool(BaseTool):
         if not token:
             return "Error: Could not authenticate with Snov.io. Check SNOV_CLIENT_ID and SNOV_CLIENT_SECRET env vars."
         
-        url = "https://api.snov.io/v1/get-email"
-        # FIX: Snov.io API requires snake_case for first_name and last_name
+        # FIX: Correct API endpoint and camelCase parameters as per Snov.io v1 API
+        url = "https://api.snov.io/v1/get-emails-from-names"
         payload = {
             "access_token": token,
             "domain": company_domain,
-            "first_name": first_name,
-            "last_name": last_name
+            "firstName": first_name,
+            "lastName": last_name
         }
         
         try:
             response = requests.post(url, data=payload, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                email = data.get("data", {}).get("email")
-                if email and email != "not_found":
-                    return f"Success! Found email: {email}"
-                else:
-                    return f"Could not find an email for {first_name} {last_name} at {company_domain}."
+                emails = data.get("data", [])
+                # The endpoint returns a list of emails
+                if emails and isinstance(emails, list) and len(emails) > 0:
+                    email = emails[0].get("email")
+                    if email and email != "not_found":
+                        return f"Success! Found email: {email}"
+                return f"Could not find an email for {first_name} {last_name} at {company_domain}."
             else:
-                return f"Snov.io API Error: {response.status_code}"
+                return f"Snov.io API Error: {response.status_code} - {response.text[:200]}"
         except Exception as e:
             return f"Error calling Snov.io API: {str(e)}"
             
