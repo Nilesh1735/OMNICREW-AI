@@ -96,11 +96,12 @@ class SnovEmailFinderTool(BaseTool):
             return "Error: Could not authenticate with Snov.io. Check SNOV_CLIENT_ID and SNOV_CLIENT_SECRET env vars."
         
         url = "https://api.snov.io/v1/get-email"
+        # FIX: Snov.io API requires snake_case for first_name and last_name
         payload = {
             "access_token": token,
             "domain": company_domain,
-            "firstName": first_name,
-            "lastName": last_name
+            "first_name": first_name,
+            "last_name": last_name
         }
         
         try:
