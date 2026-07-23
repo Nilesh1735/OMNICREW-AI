@@ -5,7 +5,7 @@ import AuthScreen from './components/AuthScreen';
 import PipelineGraph from './components/PipelineGraph';
 import ErrorBoundary from './components/ErrorBoundary';
 import CanvasBackground from './components/CanvasBackground';
-import SmoothScroll from './components/SmoothScroll'; // <-- ADDED IMPORT
+import SmoothScroll from './components/SmoothScroll'; 
 import Admin from './pages/Admin';
 import { useLeads } from './hooks/useLeads';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -67,31 +67,6 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  useEffect(() => {
-    if (logs.length > 0) {
-      const lastLog = logs[logs.length - 1];
-      if (
-        lastLog.action === "Task Completed" || 
-        lastLog.action === "Saved" || 
-        lastLog.action === "Error" || 
-        lastLog.action === "Task Failed"
-      ) {
-        setIsSubmitting(false);
-        
-        if (lastLog.action === "Task Failed" || lastLog.action === "Error") {
-          showToast('Pipeline halted. Check telemetry.', 'error');
-          setVignette('error');
-        } else {
-          showToast('Extraction sequence finished.', 'success');
-          setVignette('success');
-        }
-        
-        setTimeout(() => setVignette(null), 1200);
-        if (wsRef.current) wsRef.current.close();
-      }
-    }
-  }, [logs, showToast]);
-
   const startTask = async () => {
     setError(null);
     setIsSubmitting(true);
@@ -125,13 +100,36 @@ const Dashboard: React.FC = () => {
         try {
           const logData = JSON.parse(event.data);
           setLogs((prevLogs) => [...prevLogs, logData]);
+          
+          // FIX: Dynamically check if the task is done based on the action
+          const isDone = ["Task Completed", "Saved", "Error", "Task Failed"].includes(logData.action);
+          if (isDone) {
+            setIsSubmitting(false);
+            if (logData.action === "Task Failed" || logData.action === "Error") {
+              showToast('Pipeline halted. Check telemetry.', 'error');
+              setVignette('error');
+            } else {
+              showToast('Extraction sequence finished.', 'success');
+              setVignette('success');
+            }
+            setTimeout(() => setVignette(null), 1200);
+            if (wsRef.current) wsRef.current.close();
+          }
         } catch (e) {
           console.error("Failed to parse log data", e);
         }
       };
       
-      ws.onclose = () => setStatus('disconnected');
-      ws.onerror = () => setStatus('disconnected');
+      // FIX: If the socket closes for any reason, force the UI to stop spinning
+      // and change status to IDLE instead of OFFLINE
+      ws.onclose = () => {
+        setStatus('disconnected');
+        setIsSubmitting(false); 
+      };
+      ws.onerror = () => {
+        setStatus('disconnected');
+        setIsSubmitting(false);
+      };
       
     } catch (err: any) {
       console.error('Failed to start task:', err);
@@ -141,7 +139,8 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const statusText = status === 'connected' ? 'SYSTEM_ONLINE' : 'OFFLINE';
+  // FIX: Change "OFFLINE" to "PIPELINE_IDLE" so it doesn't look like the server crashed
+  const statusText = status === 'connected' ? 'SYSTEM_ONLINE' : 'SYSTEM_IDLE';
 
   return (
     <div className="dashboard-container" ref={dashboardRef} onMouseMove={handleParallax} onMouseLeave={handleParallaxLeave}>
@@ -313,9 +312,9 @@ const RootApp: React.FC = () => {
 const App: React.FC = () => (
   <ToastProvider>
     <AuthProvider>
-      <SmoothScroll> {/* <-- WRAPPED HERE */}
+      <SmoothScroll> 
         <RootApp />
-      </SmoothScroll> {/* <-- CLOSED HERE */}
+      </SmoothScroll> 
     </AuthProvider>
   </ToastProvider>
 );
