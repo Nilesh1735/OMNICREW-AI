@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
   const { showToast } = useToast();
   const { leads, isLoading } = useLeads();
   
-  const [taskDescription, setTaskDescription] = useState('Find the title and points of the top story on Hacker News.');
+  const [taskDescription, setTaskDescription] = useState('Enter your prompt.');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vignette, setVignette] = useState<'success' | 'error' | null>(null);

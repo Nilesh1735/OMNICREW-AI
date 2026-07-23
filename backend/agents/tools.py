@@ -10,6 +10,7 @@ from security.ssrf_blocker import check_ssrf_and_exposed_files
 
 logger = logging.getLogger(__name__)
 
+
 class WebScraperTool(BaseTool):
     name: str = "Web Scraper"
     description: str = "Useful for navigating to a specific URL and extracting all visible text content from the web page."
@@ -21,9 +22,9 @@ class WebScraperTool(BaseTool):
                 url = data.get("url", url)
             except Exception:
                 pass
-            
+
         logger.info(f"Security validation for URL: {url}")
-        
+
         try:
             check_ssrf_and_exposed_files(url)
             validation = validate_target_url(url)
@@ -35,9 +36,9 @@ class WebScraperTool(BaseTool):
             return str(e)
         except Exception as e:
             return f"Security validation failed: {str(e)}"
-            
+
         logger.info(f"Scraping URL with requests fallback: {url}")
-        
+
         try:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -48,15 +49,15 @@ class WebScraperTool(BaseTool):
             response = requests.get(url, timeout=15, headers=headers)
             soup = BeautifulSoup(response.text, 'html.parser')
             text_content = soup.get_text(separator='\n', strip=True)
-            
-            # Fallback to Jina AI Reader if the page is JS-heavy and returned little/no text
+
+            # Fallback to Jina AI Reader if page is JS-heavy or returned little text
             if len(text_content) < 200 or "Page not found" in text_content:
-                logger.info(f"Standard scrape failed or returned empty. Falling back to Jina AI Reader for {url}")
+                logger.info(f"Standard scrape failed. Falling back to Jina AI Reader for {url}")
                 jina_url = f"https://r.jina.ai/{url}"
                 jina_response = requests.get(jina_url, timeout=20, headers={"Accept": "text/plain"})
                 if jina_response.status_code == 200 and len(jina_response.text) > 200:
                     text_content = jina_response.text
-            
+
             if text_content:
                 return text_content[:5000]
             return "No text content found on the page."
@@ -69,7 +70,7 @@ class WebScraperTool(BaseTool):
 
 class SnovEmailFinderTool(BaseTool):
     name: str = "Email Finder Tool"
-    description: str = "Finds the most likely email address for a person given their first name, last name, and company domain. Use this tool ONLY after you have successfully scraped a hiring manager's name and company website."
+    description: str = "Finds the most likely email address for a person given their first name, last name, and company domain. Use this tool ONLY after you have successfully scraped a person's name and company domain from a web page."
 
     def _get_snov_token(self) -> str:
         client_id = os.getenv("SNOV_CLIENT_ID")
@@ -94,8 +95,7 @@ class SnovEmailFinderTool(BaseTool):
         token = self._get_snov_token()
         if not token:
             return "Error: Could not authenticate with Snov.io. Check SNOV_CLIENT_ID and SNOV_CLIENT_SECRET env vars."
-        
-        # FIX: Correct API endpoint and camelCase parameters as per Snov.io v1 API
+
         url = "https://api.snov.io/v1/get-emails-from-names"
         payload = {
             "access_token": token,
@@ -103,22 +103,25 @@ class SnovEmailFinderTool(BaseTool):
             "firstName": first_name,
             "lastName": last_name
         }
-        
+
         try:
             response = requests.post(url, data=payload, timeout=10)
+            logger.info(f"Snov.io raw response: {response.text[:500]}")
+
             if response.status_code == 200:
                 data = response.json()
-                emails = data.get("data", [])
-                # The endpoint returns a list of emails
-                if emails and isinstance(emails, list) and len(emails) > 0:
+                data_obj = data.get("data") or {}       # handles None when Snov returns "data": null
+                emails = data_obj.get("emails", [])
+                if emails and len(emails) > 0:
                     email = emails[0].get("email")
-                    if email and email != "not_found":
-                        return f"Success! Found email: {email}"
+                    status = emails[0].get("emailStatus", "unknown")
+                    if email:
+                        return f"Success! Found email: {email} (status: {status})"
                 return f"Could not find an email for {first_name} {last_name} at {company_domain}."
             else:
                 return f"Snov.io API Error: {response.status_code} - {response.text[:200]}"
         except Exception as e:
             return f"Error calling Snov.io API: {str(e)}"
-            
+
     async def _arun(self, first_name: str, last_name: str, company_domain: str) -> str:
         return await asyncio.to_thread(self._run, first_name, last_name, company_domain)
