@@ -31,7 +31,7 @@ def get_fallback_llms() -> List[Tuple[object, str]]:
     deepseek_key = os.getenv("DEEPSEEK_API_KEY")
     if deepseek_key:
         # Try multiple model names. If one is rejected by the API, it falls back to the next.
-        deepseek_models = ["deepseek-chat", "deepseek-v4-flash"]
+        deepseek_models = ["deepseek-v4-flash"]
         for model_name in deepseek_models:
             try:
                 logger.info(f"Initializing DeepSeek Model: {model_name}")
