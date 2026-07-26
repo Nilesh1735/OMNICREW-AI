@@ -18,13 +18,7 @@
 
 </div>
 
-<br>
 
-<div align="center">
-<a href="https://github.com/Nilesh1735/OMNICREW-AI">
-<img src="https://github-readme-stats.vercel.app/api/pin/?username=Nilesh1735&repo=OMNICREW-AI&theme=highcontrast&title_color=EC4730&icon_color=EC4730&border_color=EC4730" alt="OMNICREW-AI" />
-</a>
-</div>
 
 ## Overview
 
